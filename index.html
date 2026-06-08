@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>NEXUS EARN - Executive Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #0a0c15; color: #fff; min-height: 100vh; overflow-x: hidden; }
+        
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0a0c15, #111424);
+            z-index: 10000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .loading-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-icon {
+            width: 80px; height: 80px; background: linear-gradient(135deg, #e5b842, #f5d061);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; animation: pulse 1.5s infinite;
+            box-shadow: 0 0 30px rgba(229,184,66,0.3);
+        }
+        .loader-icon i { font-size: 40px; color: #111424; }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .loader-text { font-size: 1.1rem; font-weight: 800; color: #e5b842; margin-bottom: 15px; letter-spacing: 2px; }
+        .loader-bar { width: 220px; height: 2px; background: #2d345a; border-radius: 2px; overflow: hidden; }
+        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e5b842, #f5d061); animation: fillBar 2.5s ease-out; }
+        @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
+        .loader-dots { display: flex; gap: 8px; margin-top: 15px; }
+        .loader-dots span { width: 7px; height: 7px; background: #e5b842; border-radius: 50%; animation: bounce 1.4s infinite; }
+        .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
+        .loading-steps {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            color: #636b8f;
+            font-size: 0.65rem;
+        }
+        .loading-steps span.active { color: #e5b842; }
+        
+        /* Password Modal */
+        .password-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); z-index: 20000; display: flex;
+            align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .password-modal.hide { display: none; }
+        .password-box {
+            background: #111424;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            border: 1px solid rgba(229,184,66,0.3);
+            animation: fadeInUp 0.4s ease;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .password-box i { font-size: 2.5rem; color: #e5b842; margin-bottom: 12px; }
+        .password-box h3 { font-size: 1.2rem; margin-bottom: 8px; }
+        .password-box p { font-size: 0.7rem; color: #9ca3af; margin-bottom: 18px; }
+        .password-box input {
+            width: 100%;
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 12px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.9rem;
+            text-align: center;
+            letter-spacing: 4px;
+            font-weight: 700;
+            outline: none;
+        }
+        .password-box input:focus { border-color: #e5b842; }
+        .password-box button {
+            width: 100%;
+            background: linear-gradient(135deg, #f5d061, #e5b842);
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            color: #111424;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .admin-container { max-width: 1400px; margin: 0 auto; padding: 15px; display: none; }
+        
+        .header {
+            background: #111424;
+            border-radius: 14px;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid rgba(229,184,66,0.1);
+        }
+        .logo h2 { color: #e5b842; font-size: 1.1rem; }
+        .logo p { font-size: 0.6rem; color: #9ca3af; }
+        
+        /* Notification Bell */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            background: rgba(229,184,66,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .notification-bell:hover { background: rgba(229,184,66,0.2); transform: scale(1.05); }
+        .notification-bell i { font-size: 1.1rem; color: #e5b842; }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 10px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 70px;
+            right: 15px;
+            width: 320px;
+            max-height: 450px;
+            background: #111424;
+            border-radius: 14px;
+            border: 1px solid rgba(229,184,66,0.2);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .notification-panel.active { display: flex; }
+        .notification-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notification-header h4 { color: #e5b842; font-size: 0.85rem; }
+        .clear-all {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+        .notification-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 380px;
+        }
+        .notification-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .notification-item:hover { background: #1b203a; }
+        .notification-item.unread { background: rgba(229,184,66,0.05); border-left: 3px solid #e5b842; }
+        .notification-icon { width: 30px; height: 30px; background: rgba(229,184,66,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .notification-icon i { color: #e5b842; font-size: 0.8rem; }
+        .notification-content { flex: 1; }
+        .notification-title { font-size: 0.75rem; font-weight: 600; margin-bottom: 2px; }
+        .notification-message { font-size: 0.65rem; color: #9ca3af; }
+        .notification-time { font-size: 0.55rem; color: #636b8f; margin-top: 2px; }
+        
+        .discussions-circle {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #e5b842, #f5d061);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .discussions-circle:hover { transform: scale(1.05); }
+        .discussions-circle i { font-size: 1rem; color: #111424; }
+        
+        .admin-btn {
+            background: linear-gradient(135deg, #e5b842, #f5d061);
+            border: none;
+            padding: 7px 18px;
+            border-radius: 25px;
+            color: #111424;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .admin-btn:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(229,184,66,0.3); }
+        
+        .enable-notif-btn {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            padding: 5px 10px;
+            border-radius: 18px;
+            color: #10b981;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .enable-notif-btn:hover { background: rgba(16,185,129,0.25); }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1b203a, #13172c);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(229,184,66,0.1);
+            transition: all 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(229,184,66,0.3); }
+        .stat-card i { font-size: 1.3rem; color: #e5b842; margin-bottom: 5px; display: block; }
+        .stat-card .number { font-size: 1.3rem; font-weight: 800; }
+        .stat-card .label { font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
+        
+        .chart-card {
+            background: #111424;
+            border-radius: 14px;
+            border: 1px solid rgba(229,184,66,0.1);
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .chart-header {
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chart-header h3 { color: #e5b842; font-size: 0.8rem; }
+        .chart-container { padding: 15px; height: 260px; position: relative; }
+        
+        .section-card {
+            background: #111424;
+            border-radius: 14px;
+            border: 1px solid rgba(229,184,66,0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .card-header h3 { color: #e5b842; font-size: 0.8rem; }
+        
+        .table-container { overflow-x: auto; padding: 0 15px 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: #e5b842; font-size: 0.65rem; text-transform: uppercase; }
+        td { font-size: 0.7rem; }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.55rem;
+            font-weight: 600;
+        }
+        .badge-vip1 { background: rgba(229,184,66,0.15); color: #e5b842; }
+        .badge-vip2 { background: rgba(192,132,252,0.15); color: #c084fc; }
+        .badge-vip3 { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .badge-vip4 { background: rgba(16,185,129,0.15); color: #10b981; }
+        .badge-vip5 { background: rgba(249,115,22,0.15); color: #f97316; }
+        .badge-vip6 { background: rgba(236,72,153,0.15); color: #ec4899; }
+        .badge-vip7 { background: linear-gradient(135deg, rgba(229,184,66,0.2), rgba(229,184,66,0.05)); color: #e5b842; }
+        .badge-standard { background: rgba(156,163,175,0.15); color: #9ca3af; }
+        
+        .btn-sm {
+            background: rgba(16,185,129,0.15);
+            border: none;
+            padding: 4px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #10b981;
+        }
+        .btn-sm:hover { background: rgba(16,185,129,0.25); }
+        
+        .search-box input {
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 6px 12px;
+            border-radius: 8px;
+            color: #fff;
+            width: 200px;
+            outline: none;
+            font-size: 0.7rem;
+        }
+        .search-box input:focus { border-color: #e5b842; }
+        
+        .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 12px; padding-bottom: 8px; }
+        .pagination button {
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 4px 10px;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.65rem;
+        }
+        .pagination button.active { background: #e5b842; color: #000; }
+        
+        .owner-badge {
+            background: rgba(229,184,66,0.1);
+            padding: 4px 10px;
+            border-radius: 18px;
+            font-size: 0.6rem;
+            color: #e5b842;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .custom-toast {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: #1b203a;
+            border-left: 3px solid #10b981;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .custom-toast.show { transform: translateX(0); }
+        .custom-toast i { font-size: 1rem; color: #10b981; }
+        .custom-toast span { font-size: 0.75rem; }
+        
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .notification-panel { width: 300px; right: 10px; }
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .admin-container { padding: 12px; }
+            .chart-container { height: 220px; }
+            .header { padding: 10px 15px; }
+        }
+        @media (max-width: 550px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .header { flex-direction: column; align-items: stretch; }
+            .header > div:last-child { justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Custom Toast -->
+<div class="custom-toast" id="customToast">
+    <i class="fa-solid fa-bell"></i>
+    <span id="toastMessage">New notification</span>
+</div>
+
+<!-- Loading Animation -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-icon"><i class="fa-solid fa-chart-line"></i></div>
+    <div class="loader-text">NEXUS EXECUTIVE</div>
+    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+    <div class="loading-steps">
+        <span id="step1" class="active">🔐 Security</span>
+        <span id="step2">📊 Fetching Data</span>
+        <span id="step3">🔔 Loading Notifications</span>
+        <span id="step4">📈 Building Charts</span>
+        <span id="step5">✨ Ready</span>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="password-modal" id="passwordModal">
+    <div class="password-box">
+        <i class="fa-solid fa-lock"></i>
+        <h3>🔐 EXECUTIVE ACCESS</h3>
+        <p>Enter security code to access the dashboard</p>
+        <input type="password" id="adminPasswordInput" placeholder="ENTER CODE" maxlength="20" autocomplete="off">
+        <button id="verifyPasswordBtn"><i class="fa-solid fa-key"></i> VERIFY ACCESS</button>
+    </div>
+</div>
+
+<!-- Notification Panel -->
+<div class="notification-panel" id="notificationPanel">
+    <div class="notification-header">
+        <h4><i class="fa-regular fa-bell"></i> Notifications</h4>
+        <button class="clear-all" id="clearAllNotifBtn">Clear all</button>
+    </div>
+    <div class="notification-list" id="notificationList">
+        <div style="text-align:center; padding:20px; color:#636b8f;">No notifications yet</div>
+    </div>
+</div>
+
+<!-- Main Dashboard -->
+<div class="admin-container" id="mainContent">
+    <div class="header">
+        <div class="logo">
+            <h2><i class="fa-solid fa-chart-simple"></i> NEXUS EXECUTIVE</h2>
+            <p>Enterprise Management Dashboard</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="notification-bell" id="notificationBell">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
+            </div>
+            <button class="enable-notif-btn" id="enableNotifBtn"><i class="fa-solid fa-bell"></i> Enable Alerts</button>
+            <div class="discussions-circle" id="discussionsBtn" title="Team Chat">
+                <i class="fa-solid fa-comments"></i>
+            </div>
+            <div class="owner-badge">
+                <i class="fa-solid fa-crown"></i> DANIEL
+            </div>
+            <button class="admin-btn" id="adminUsersBtn"><i class="fa-solid fa-user-gear"></i> ADMIN USERS</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card"><i class="fa-solid fa-users"></i><div class="number" id="totalUsers">0</div><div class="label">Total Users</div></div>
+        <div class="stat-card"><i class="fa-solid fa-user-plus"></i><div class="number" id="newUsersThisMonth">0</div><div class="label">New This Month</div></div>
+        <div class="stat-card"><i class="fa-solid fa-crown"></i><div class="number" id="totalVIP">0</div><div class="label">VIP Users</div></div>
+        <div class="stat-card"><i class="fa-solid fa-wallet"></i><div class="number" id="totalBalance">₦0</div><div class="label">Total Balance</div></div>
+        <div class="stat-card"><i class="fa-solid fa-money-bill-wave"></i><div class="number" id="totalDeposited">₦0</div><div class="label">Total Deposited</div></div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-column"></i> User Growth Analytics</h3>
+            <div class="month-selector">
+                <select id="yearSelect" style="background:transparent; border:none; color:#fff; font-size:0.7rem;">
+                    <option value="2024">2024</option>
+                    <option value="2025" selected>2025</option>
+                    <option value="2026">2026</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="userGrowthChart"></canvas>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-database"></i> User Directory</h3>
+            <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search by name or phone..."></div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>User ID</th><th>Username</th><th>Phone</th><th>VIP Level</th><th>Balance</th><th>Deposited</th><th>Joined</th><th>Action</th></tr>
+                </thead>
+                <tbody id="usersTableBody"><tr><td colspan="8" style="text-align:center; padding:30px;"><i class="fa-solid fa-spinner fa-pulse"></i> Loading...</div></tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, onSnapshot, doc, setDoc, addDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDUIQ5s-MI2V3rsi_uWBbRb5YGcFmjjKK4",
+        authDomain: "nexus-earn-1.firebaseapp.com",
+        projectId: "nexus-earn-1",
+        storageBucket: "nexus-earn-1.firebasestorage.app",
+        messagingSenderId: "779765076952",
+        appId: "1:779765076952:web:fa5fac51bef82e74b598ad"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const messaging = getMessaging(app);
+
+    const VAPID_KEY = "BNVspgdAM2DSbGJ7OMbZiy57LKt4uvsOb4twi_1bDvsSs16x-A3NHT3JM06vJCSTbm5wcFsv6428PyvsnV9sgTM";
+
+    let allUsers = [];
+    let currentPage = 1;
+    let currentSearch = "";
+    let userChart = null;
+    let notifications = [];
+    let unreadCount = 0;
+    let permissionGranted = false;
+    let lastUserCount = 0;
+    let fcmTokenSaved = false;
+    const perPage = 15;
+    const ADMIN_CODE = "SEVENS";
+
+    function showCustomToast(message) {
+        const toast = document.getElementById('customToast');
+        document.getElementById('toastMessage').innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function showDesktopNotification(title, body) {
+        if (!permissionGranted) return;
+        if ('Notification' in window && Notification.permission === 'granted') {
+            const notification = new Notification(title, {
+                body: body,
+                icon: '/logo.png',
+                badge: '/logo.png',
+                vibrate: [200, 100, 200],
+                silent: false,
+                tag: 'new-user'
+            });
+            notification.onclick = () => { window.focus(); notification.close(); };
+            const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        }
+    }
+
+    function playNotificationSound() {
+        const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+        audio.play().catch(e => console.log('Audio play failed:', e));
+    }
+
+    async function addNotification(title, message, type = 'user') {
+        const notification = {
+            id: Date.now(),
+            title: title,
+            message: message,
+            type: type,
+            timestamp: new Date(),
+            read: false
+        };
+        notifications.unshift(notification);
+        if (notifications.length > 50) notifications.pop();
+        unreadCount++;
+        updateNotificationBadge();
+        renderNotificationList();
+        try {
+            await addDoc(collection(db, "adminNotifications"), { ...notification, timestamp: new Date() });
+        } catch(e) { console.error('Save notification error:', e); }
+        showDesktopNotification(title, message);
+        showCustomToast(message);
+        playNotificationSound();
+    }
+
+    function updateNotificationBadge() {
+        const badge = document.getElementById('notifBadge');
+        if (unreadCount > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function renderNotificationList() {
+        const container = document.getElementById('notificationList');
+        if (notifications.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#636b8f;">No notifications yet</div>';
+            return;
+        }
+        container.innerHTML = '';
+        notifications.forEach(notif => {
+            const div = document.createElement('div');
+            div.className = `notification-item ${!notif.read ? 'unread' : ''}`;
+            div.onclick = () => markNotificationRead(notif.id);
+            div.innerHTML = `
+                <div class="notification-icon"><i class="fa-solid fa-user-plus"></i></div>
+                <div class="notification-content">
+                    <div class="notification-title">${notif.title}</div>
+                    <div class="notification-message">${notif.message}</div>
+                    <div class="notification-time">${new Date(notif.timestamp).toLocaleTimeString()}</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function markNotificationRead(id) {
+        const notif = notifications.find(n => n.id === id);
+        if (notif && !notif.read) {
+            notif.read = true;
+            unreadCount--;
+            updateNotificationBadge();
+            renderNotificationList();
+        }
+    }
+
+    async function requestNotificationPermission() {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                permissionGranted = true;
+                showCustomToast('✅ Notifications enabled! You will receive alerts for new users.');
+                await getAndSaveFCMToken();
+            } else {
+                showCustomToast('⚠️ Notifications disabled. You can enable them in browser settings.');
+            }
+        } else {
+            showCustomToast('❌ Your browser does not support desktop notifications.');
+        }
+    }
+
+    async function getAndSaveFCMToken() {
+        if (fcmTokenSaved) return;
+        try {
+            const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+            if (token) {
+                await setDoc(doc(db, "adminTokens", "admin"), { token: token, updatedAt: new Date(), browser: navigator.userAgent });
+                fcmTokenSaved = true;
+                console.log('FCM Token saved successfully');
+            }
+        } catch(e) { console.error('FCM token error:', e); }
+    }
+
+    onMessage(messaging, (payload) => {
+        console.log('Foreground message received:', payload);
+        if (payload.notification) {
+            addNotification(payload.notification.title || 'New Alert', payload.notification.body || 'Check your dashboard', 'fcm');
+        }
+    });
+
+    function listenForNewUsers() {
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, orderBy("createdAt", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const currentUserCount = snapshot.size;
+            if (lastUserCount > 0 && currentUserCount > lastUserCount) {
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isNew = !allUsers.find(u => u.id === doc.id);
+                    if (isNew) {
+                        const username = data.username || data.phone || 'New User';
+                        addNotification('📱 New User Registration', `${username} just joined NEXUS EARN! ${data.phone ? `📞 ${data.phone}` : ''}`, 'user');
+                    }
+                });
+            }
+            lastUserCount = currentUserCount;
+        });
+    }
+
+    async function loadDashboardData() {
+        try {
+            updateLoadingStep(3);
+            const userSnap = await getDocs(collection(db, "users"));
+            allUsers = [];
+            userSnap.forEach(doc => {
+                const data = doc.data();
+                let joinDate = null;
+                if (data.createdAt) {
+                    if (data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds * 1000);
+                    else if (data.createdAt.toDate) joinDate = data.createdAt.toDate();
+                }
+                allUsers.push({
+                    id: doc.id,
+                    username: data.username || data.phone || "Unknown",
+                    phone: data.phone || "-",
+                    balance: data.balance || 0,
+                    tierCode: data.tierCode || "NONE",
+                    totalDeposited: 0,
+                    createdAt: joinDate
+                });
+            });
+            updateLoadingStep(4);
+            
+            const notifSnap = await getDocs(query(collection(db, "adminNotifications"), orderBy("timestamp", "desc"), limit(30)));
+            notifications = [];
+            notifSnap.forEach(doc => { notifications.push({ id: doc.id, ...doc.data(), read: true }); });
+            unreadCount = 0;
+            updateNotificationBadge();
+            renderNotificationList();
+            
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const monthlyData = {};
+            let newUsersThisMonth = 0;
+            allUsers.forEach(user => {
+                if (user.createdAt) {
+                    const year = user.createdAt.getFullYear();
+                    const month = user.createdAt.getMonth();
+                    const key = `${year}-${month + 1}`;
+                    monthlyData[key] = (monthlyData[key] || 0) + 1;
+                    if (year === currentYear && month === currentMonth) newUsersThisMonth++;
+                }
+            });
+            
+            const depositPromises = allUsers.map(async (user) => {
+                const ledgerQuery = query(collection(db, "ledger"), where("uid", "==", user.id));
+                const ledgerSnap = await getDocs(ledgerQuery);
+                let deposited = 0;
+                ledgerSnap.forEach(doc => {
+                    const data = doc.data();
+                    const title = (data.title || "").toLowerCase();
+                    if (title.includes("paystack") || title.includes("deposit")) deposited += data.amount || 0;
+                });
+                user.totalDeposited = deposited;
+            });
+            await Promise.all(depositPromises);
+            updateLoadingStep(5);
+            
+            const totalUsers = allUsers.length;
+            const totalVIP = allUsers.filter(u => u.tierCode !== "NONE").length;
+            const totalBalance = allUsers.reduce((sum, u) => sum + (u.balance || 0), 0);
+            const totalDeposited = allUsers.reduce((sum, u) => sum + (u.totalDeposited || 0), 0);
+            
+            animateNumber('totalUsers', totalUsers);
+            animateNumber('newUsersThisMonth', newUsersThisMonth);
+            animateNumber('totalVIP', totalVIP);
+            animateNumberCurrency('totalBalance', totalBalance);
+            animateNumberCurrency('totalDeposited', totalDeposited);
+            
+            buildChartData(monthlyData, currentYear);
+            renderUsers();
+            listenForNewUsers();
+        } catch(e) { 
+            console.error(e);
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#ef4444;"><i class="fa-solid fa-circle-exclamation"></i> Error loading data</div>';
+        }
+    }
+
+    function buildChartData(monthlyData, year) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const userCounts = [];
+        for (let i = 0; i < 12; i++) {
+            const key = `${year}-${i + 1}`;
+            userCounts.push(monthlyData[key] || 0);
+        }
+        let cumulative = 0;
+        const cumulativeCounts = userCounts.map(count => { cumulative += count; return cumulative; });
+        
+        const ctx = document.getElementById('userGrowthChart').getContext('2d');
+        if (userChart) userChart.destroy();
+        userChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    { label: 'New Users (Monthly)', data: userCounts, borderColor: '#e5b842', backgroundColor: 'rgba(229,184,66,0.1)', borderWidth: 2, fill: true, tension: 0.3 },
+                    { label: 'Total Users', data: cumulativeCounts, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.05)', borderWidth: 2, fill: false, tension: 0.3, borderDash: [5, 5] }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#fff', font: { size: 10 } } } } }
+        });
+    }
+
+    function animateNumber(id, target) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let current = 0;
+        const increment = Math.ceil(target / 40);
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) { el.innerText = target.toLocaleString(); clearInterval(timer); }
+            else el.innerText = current.toLocaleString();
+        }, 20);
+    }
+
+    function animateNumberCurrency(id, target) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let current = 0;
+        const increment = Math.ceil(target / 40);
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) { el.innerHTML = '₦' + target.toLocaleString(); clearInterval(timer); }
+            else el.innerHTML = '₦' + current.toLocaleString();
+        }, 20);
+    }
+
+    function getVipBadgeClass(tier) {
+        if (tier === "NONE") return "badge-standard";
+        if (tier === "VIP1") return "badge-vip1";
+        if (tier === "VIP2") return "badge-vip2";
+        if (tier === "VIP3") return "badge-vip3";
+        if (tier === "VIP4") return "badge-vip4";
+        if (tier === "VIP5") return "badge-vip5";
+        if (tier === "VIP6") return "badge-vip6";
+        return "badge-vip7";
+    }
+
+    function renderUsers() {
+        let filtered = [...allUsers];
+        if (currentSearch) {
+            const search = currentSearch.toLowerCase();
+            filtered = filtered.filter(u => u.username.toLowerCase().includes(search) || u.phone.includes(search));
+        }
+        const start = (currentPage - 1) * perPage;
+        const paginated = filtered.slice(start, start + perPage);
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (paginated.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px;">No users found</div>';
+        } else {
+            tbody.innerHTML = '';
+            paginated.forEach(u => {
+                const tierDisplay = u.tierCode === "NONE" ? "Standard" : u.tierCode;
+                const badgeClass = getVipBadgeClass(u.tierCode);
+                const joinDate = u.createdAt ? u.createdAt.toLocaleDateString() : '-';
+                tbody.innerHTML += `<tr>
+                    <td><small style="color:#636b8f; font-family:monospace;">${u.id.slice(0,10)}...</small></td>
+                    <td><strong>${escapeHtml(u.username)}</strong></td>
+                    <td>${u.phone}</div>
+                    <td><span class="badge ${badgeClass}">${tierDisplay}</span></td>
+                    <td style="color:#10b981;">₦${(u.balance||0).toLocaleString()}</td>
+                    <td style="color:#e5b842;">₦${(u.totalDeposited||0).toLocaleString()}</td>
+                    <td><small>${joinDate}</small></td>
+                    <td><button class="btn-sm" onclick="viewUser('${u.id}')"><i class="fa-solid fa-eye"></i> View</button></td>
+                </tr>`;
+            });
+        }
+        
+        const totalPages = Math.ceil(filtered.length / perPage);
+        let pages = '';
+        for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+            pages += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        document.getElementById('pagination').innerHTML = pages;
+    }
+
+    window.viewUser = (id) => {
+        const user = allUsers.find(u => u.id === id);
+        Swal.fire({
+            title: user.username,
+            html: `<div style="text-align:left;"><p><strong>User ID:</strong> ${user.id}</p><p><strong>Username:</strong> ${user.username}</p><p><strong>Phone:</strong> ${user.phone}</p><p><strong>Balance:</strong> ₦${(user.balance||0).toLocaleString()}</p><p><strong>VIP:</strong> ${user.tierCode === 'NONE' ? 'Standard' : user.tierCode}</p><p><strong>Joined:</strong> ${user.createdAt ? user.createdAt.toLocaleString() : '-'}</p></div>`,
+            background: '#111424', color: '#fff', confirmButtonColor: '#e5b842'
+        });
+    };
+
+    window.goToPage = (page) => { currentPage = page; renderUsers(); };
+    
+    function updateLoadingStep(step) {
+        const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+        steps.forEach((s, i) => { const el = document.getElementById(s); if (el) i < step ? el.classList.add('active') : el.classList.remove('active'); });
+    }
+
+    function hideLoading() {
+        const loader = document.getElementById('loadingOverlay');
+        loader.classList.add('hide');
+        setTimeout(() => loader.style.display = 'none', 500);
+    }
+
+    function showContent() {
+        document.getElementById('mainContent').style.display = 'block';
+        hideLoading();
+    }
+
+    function checkSession() {
+        const fromAdmin = sessionStorage.getItem('nexusAdminSession');
+        const verified = sessionStorage.getItem('nexusVerified');
+        if (fromAdmin === 'true' || verified === 'true') {
+            document.getElementById('passwordModal').classList.add('hide');
+            updateLoadingStep(2);
+            loadDashboardData();
+            showContent();
+        } else {
+            document.getElementById('passwordModal').classList.remove('hide');
+            hideLoading();
+        }
+    }
+
+    function verifyPassword() {
+        const input = document.getElementById('adminPasswordInput').value.trim().toUpperCase();
+        if (input === ADMIN_CODE) {
+            sessionStorage.setItem('nexusVerified', 'true');
+            document.getElementById('passwordModal').classList.add('hide');
+            loadDashboardData();
+            showContent();
+        } else {
+            Swal.fire({ title: 'ACCESS DENIED', text: 'Invalid security code.', icon: 'error', background: '#111424', color: '#fff', confirmButtonColor: '#ef4444' });
+            document.getElementById('adminPasswordInput').value = '';
+        }
+    }
+
+    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+    // Event Listeners
+    document.getElementById('searchInput')?.addEventListener('input', (e) => { currentSearch = e.target.value; currentPage = 1; renderUsers(); });
+    document.getElementById('yearSelect')?.addEventListener('change', async (e) => {
+        const year = parseInt(e.target.value);
+        const monthlyData = {};
+        allUsers.forEach(user => {
+            if (user.createdAt && user.createdAt.getFullYear() === year) {
+                const key = `${year}-${user.createdAt.getMonth() + 1}`;
+                monthlyData[key] = (monthlyData[key] || 0) + 1;
+            }
+        });
+        buildChartData(monthlyData, year);
+    });
+    
+    document.getElementById('verifyPasswordBtn')?.addEventListener('click', verifyPassword);
+    document.getElementById('adminPasswordInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyPassword(); });
+    document.getElementById('adminUsersBtn')?.addEventListener('click', () => { sessionStorage.setItem('nexusAdminSession', 'true'); window.location.href = "admin.html"; });
+    document.getElementById('discussionsBtn')?.addEventListener('click', () => {
+        const name = prompt("Enter your name:", localStorage.getItem('chatUserName') || "Team Member");
+        if (name) { localStorage.setItem('chatUserName', name); sessionStorage.setItem('nexusAdminSession', 'true'); window.location.href = "discussion.html"; }
+    });
+    
+    document.getElementById('enableNotifBtn')?.addEventListener('click', requestNotificationPermission);
+    
+    document.getElementById('notificationBell')?.addEventListener('click', () => {
+        document.getElementById('notificationPanel').classList.toggle('active');
+    });
+    
+    document.getElementById('clearAllNotifBtn')?.addEventListener('click', () => {
+        notifications = [];
+        unreadCount = 0;
+        updateNotificationBadge();
+        renderNotificationList();
+    });
+    
+    document.addEventListener('click', (e) => {
+        const panel = document.getElementById('notificationPanel');
+        const bell = document.getElementById('notificationBell');
+        if (!panel.contains(e.target) && !bell.contains(e.target)) {
+            panel.classList.remove('active');
+        }
+    });
+    
+    if ('Notification' in window && Notification.permission === 'granted') {
+        permissionGranted = true;
+        getAndSaveFCMToken();
+    }
+    
+    setTimeout(() => updateLoadingStep(2), 800);
+    setTimeout(() => updateLoadingStep(3), 1500);
+    setTimeout(() => updateLoadingStep(4), 2200);
+    setTimeout(() => updateLoadingStep(5), 3000);
+    
+    checkSession();
+</script>
+</body>
+</html>
