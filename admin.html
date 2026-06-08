@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>NEXUS EARN - Admin User Creator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #0a0c15; color: #fff; min-height: 100vh; overflow-x: hidden; }
+        
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0a0c15, #111424);
+            z-index: 10000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .loading-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-icon {
+            width: 80px; height: 80px; background: linear-gradient(135deg, #e5b842, #f5d061);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; animation: pulse 1.5s infinite;
+            box-shadow: 0 0 30px rgba(229,184,66,0.3);
+        }
+        .loader-icon i { font-size: 40px; color: #111424; }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .loader-text { font-size: 1.1rem; font-weight: 800; color: #e5b842; margin-bottom: 15px; letter-spacing: 2px; }
+        .loader-bar { width: 220px; height: 2px; background: #2d345a; border-radius: 2px; overflow: hidden; }
+        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e5b842, #f5d061); animation: fillBar 2.5s ease-out; }
+        @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
+        .loader-dots { display: flex; gap: 8px; margin-top: 15px; }
+        .loader-dots span { width: 7px; height: 7px; background: #e5b842; border-radius: 50%; animation: bounce 1.4s infinite; }
+        .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
+        
+        .admin-wrapper { max-width: 1200px; margin: 0 auto; padding: 15px; }
+        
+        /* Header */
+        .header {
+            background: #111424;
+            border-radius: 14px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid rgba(229,184,66,0.1);
+        }
+        .back-btn {
+            background: rgba(229,184,66,0.15);
+            border: 1px solid rgba(229,184,66,0.3);
+            padding: 7px 18px;
+            border-radius: 25px;
+            color: #e5b842;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: rgba(229,184,66,0.25); transform: translateX(-2px); }
+        .logo h2 { color: #e5b842; font-size: 1rem; }
+        .logo p { font-size: 0.55rem; color: #9ca3af; }
+        
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #1b203a, #13172c);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(229,184,66,0.1);
+            transition: all 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: rgba(229,184,66,0.3); }
+        .stat-card i { font-size: 1.3rem; color: #e5b842; margin-bottom: 5px; display: block; }
+        .stat-card .number { font-size: 1.3rem; font-weight: 800; }
+        .stat-card .label { font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
+        
+        /* 3 Column Layout */
+        .three-columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .column-card {
+            background: #111424;
+            border-radius: 16px;
+            border: 1px solid rgba(229,184,66,0.1);
+            overflow: hidden;
+            height: fit-content;
+        }
+        .column-header {
+            background: linear-gradient(135deg, #1b203a, #13172c);
+            padding: 12px 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .column-header h3 { color: #e5b842; font-size: 0.8rem; font-weight: 700; }
+        .column-header p { font-size: 0.55rem; color: #9ca3af; margin-top: 2px; }
+        .column-body { padding: 15px; }
+        
+        /* Step 1 - Create Form */
+        .info-display {
+            background: #0a0c15;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #2d345a;
+        }
+        .info-label {
+            font-size: 0.55rem;
+            color: #9ca3af;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .info-value {
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .copy-btn {
+            background: rgba(229,184,66,0.15);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 5px;
+            color: #e5b842;
+            cursor: pointer;
+            font-size: 0.6rem;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { background: rgba(229,184,66,0.3); }
+        
+        .vip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin: 12px 0;
+        }
+        .vip-btn {
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 6px 0;
+            border-radius: 7px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .vip-btn:hover { border-color: #e5b842; }
+        .vip-btn.active { background: #e5b842; color: #111424; border-color: #e5b842; }
+        
+        .create-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f5d061, #e5b842);
+            border: none;
+            padding: 9px;
+            border-radius: 8px;
+            color: #111424;
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .create-btn:hover { transform: scale(1.02); }
+        
+        /* Scroll Area */
+        .scroll-area {
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .scroll-area::-webkit-scrollbar { width: 3px; }
+        .scroll-area::-webkit-scrollbar-track { background: #1b203a; }
+        .scroll-area::-webkit-scrollbar-thumb { background: #e5b842; border-radius: 3px; }
+        
+        /* Pending Items */
+        .pending-item {
+            background: #0a0c15;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #e5b842;
+        }
+        .pending-phone {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.7rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pending-vip {
+            font-size: 0.55rem;
+            color: #e5b842;
+            margin-top: 4px;
+        }
+        .edit-vip-btn {
+            background: rgba(229,184,66,0.15);
+            border: none;
+            padding: 3px 8px;
+            border-radius: 5px;
+            color: #e5b842;
+            font-size: 0.55rem;
+            cursor: pointer;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 25px 12px;
+            color: #636b8f;
+            font-size: 0.7rem;
+        }
+        
+        /* Send Button */
+        .send-section {
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .send-all-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            padding: 9px;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .send-all-btn:disabled {
+            background: #2d345a;
+            color: #636b8f;
+            cursor: not-allowed;
+        }
+        .send-all-btn:hover:not(:disabled) { transform: scale(1.02); }
+        
+        /* Sent Items */
+        .sent-item {
+            background: #0a0c15;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #10b981;
+        }
+        .sent-phone {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.65rem;
+        }
+        .sent-vip {
+            font-size: 0.5rem;
+            color: #10b981;
+            margin-top: 2px;
+        }
+        
+        .badge-count {
+            display: inline-block;
+            background: #e5b842;
+            color: #111424;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            margin-left: 6px;
+        }
+        
+        .info-note {
+            font-size: 0.55rem;
+            color: #e5b842;
+            text-align: center;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        @media (max-width: 900px) {
+            .three-columns { grid-template-columns: 1fr; gap: 12px; }
+            .admin-wrapper { padding: 12px; }
+            .stats-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; align-items: stretch; }
+            .vip-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Animation -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-icon"><i class="fa-solid fa-user-gear"></i></div>
+    <div class="loader-text">ADMIN USER CREATOR</div>
+    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+    <p style="margin-top: 15px; color: #9ca3af; font-size: 11px;">Loading secure admin panel...</p>
+</div>
+
+<div class="admin-wrapper" id="mainContent" style="display: none;">
+    <!-- Header -->
+    <div class="header">
+        <button class="back-btn" id="backBtn"><i class="fa-solid fa-arrow-left"></i> Dashboard</button>
+        <div class="logo">
+            <h2><i class="fa-solid fa-user-plus"></i> ADMIN ACCOUNT CREATOR</h2>
+            <p>Create | Pending | Send to Storage</p>
+        </div>
+        <div style="width: 80px;"></div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card"><i class="fa-solid fa-clock"></i><div class="number" id="pendingCount">0</div><div class="label">Pending (Max 5)</div></div>
+        <div class="stat-card"><i class="fa-solid fa-check-circle"></i><div class="number" id="sentCount">0</div><div class="label">Sent to Storage</div></div>
+        <div class="stat-card"><i class="fa-solid fa-users"></i><div class="number" id="totalCreated">0</div><div class="label">Total Created</div></div>
+    </div>
+
+    <!-- 3 Column Layout -->
+    <div class="three-columns">
+        
+        <!-- COLUMN 1: CREATE ACCOUNT -->
+        <div class="column-card">
+            <div class="column-header">
+                <h3><i class="fa-solid fa-pen-ruler"></i> STEP 1 · CREATE</h3>
+                <p>Generate new account</p>
+            </div>
+            <div class="column-body">
+                <div class="info-display">
+                    <span class="info-label"><i class="fa-solid fa-phone"></i> PHONE NUMBER</span>
+                    <div class="info-value">
+                        <span id="phoneNumber" style="font-family:monospace;">07000000001</span>
+                        <button class="copy-btn" id="copyPhoneBtn"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+                
+                <div class="info-display">
+                    <span class="info-label"><i class="fa-solid fa-lock"></i> PASSWORD</span>
+                    <div class="info-value">
+                        <span id="passwordValue" style="font-family:monospace;">Nexus@2024</span>
+                        <button class="copy-btn" id="copyPasswordBtn"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                </div>
+                
+                <span class="info-label"><i class="fa-solid fa-crown"></i> VIP LEVEL</span>
+                <div class="vip-grid" id="vipButtons">
+                    <div class="vip-btn" data-vip="NONE">Std</div>
+                    <div class="vip-btn" data-vip="VIP1">VIP1</div>
+                    <div class="vip-btn" data-vip="VIP2">VIP2</div>
+                    <div class="vip-btn" data-vip="VIP3">VIP3</div>
+                    <div class="vip-btn" data-vip="VIP4">VIP4</div>
+                    <div class="vip-btn" data-vip="VIP5">VIP5</div>
+                    <div class="vip-btn" data-vip="VIP6">VIP6</div>
+                    <div class="vip-btn" data-vip="VIP7">VIP7</div>
+                </div>
+                
+                <button class="create-btn" id="createAccountBtn"><i class="fa-solid fa-plus-circle"></i> Create Account</button>
+                <div class="info-note">
+                    <i class="fa-solid fa-info-circle"></i> Max 5 pending accounts at a time
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 2: PENDING ACCOUNTS -->
+        <div class="column-card">
+            <div class="column-header">
+                <h3><i class="fa-solid fa-hourglass-half"></i> STEP 2 · PENDING</h3>
+                <p>Ready to send <span id="pendingCountBadge" class="badge-count">0</span></p>
+            </div>
+            <div class="column-body" style="padding-bottom: 0;">
+                <div class="scroll-area" id="pendingList">
+                    <div class="empty-state">📭 No pending accounts</div>
+                </div>
+            </div>
+            <div class="send-section">
+                <button class="send-all-btn" id="sendAllBtn" disabled><i class="fa-solid fa-paper-plane"></i> Send All to Storage</button>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: SENT ACCOUNTS -->
+        <div class="column-card">
+            <div class="column-header">
+                <h3><i class="fa-solid fa-check-circle"></i> STEP 3 · STORAGE</h3>
+                <p>Accounts in system <span id="sentCountBadge" class="badge-count">0</span></p>
+            </div>
+            <div class="column-body">
+                <div class="scroll-area" id="sentList">
+                    <div class="empty-state">✅ No accounts sent yet</div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDUIQ5s-MI2V3rsi_uWBbRb5YGcFmjjKK4",
+        authDomain: "nexus-earn-1.firebaseapp.com",
+        projectId: "nexus-earn-1",
+        storageBucket: "nexus-earn-1.firebasestorage.app",
+        messagingSenderId: "779765076952",
+        appId: "1:779765076952:web:fa5fac51bef82e74b598ad"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let pendingAccounts = [];
+    let sentAccounts = [];
+    let currentPhoneIndex = 7000000001;
+    let selectedVIP = "NONE";
+    const CONSTANT_PASSWORD = "Nexus@2024";
+    const MAX_PENDING = 5;
+
+    function hideLoading() {
+        const loader = document.getElementById('loadingOverlay');
+        loader.classList.add('hide');
+        setTimeout(() => {
+            loader.style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }, 500);
+    }
+
+    // Get next available phone
+    async function getNextPhoneNumber() {
+        let phoneNum = currentPhoneIndex;
+        let phone = "0" + phoneNum;
+        
+        const allPhones = new Set();
+        pendingAccounts.forEach(p => allPhones.add(p.phone));
+        sentAccounts.forEach(s => allPhones.add(s.phone));
+        
+        while (allPhones.has(phone)) {
+            phoneNum++;
+            phone = "0" + phoneNum;
+        }
+        currentPhoneIndex = phoneNum + 1;
+        return phone;
+    }
+
+    async function updatePhoneDisplay() {
+        const nextPhone = await getNextPhoneNumber();
+        document.getElementById('phoneNumber').innerText = nextPhone;
+    }
+
+    async function loadAllData() {
+        const pendingSnap = await getDocs(collection(db, "adminPending"));
+        pendingAccounts = [];
+        pendingSnap.forEach(doc => {
+            pendingAccounts.push({ id: doc.id, ...doc.data() });
+        });
+        pendingAccounts.sort((a,b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+        
+        const sentSnap = await getDocs(collection(db, "adminSent"));
+        sentAccounts = [];
+        sentSnap.forEach(doc => {
+            sentAccounts.push({ id: doc.id, ...doc.data() });
+        });
+        sentAccounts.sort((a,b) => (b.sentDate?.seconds || 0) - (a.sentDate?.seconds || 0));
+        
+        renderPending();
+        renderSent();
+        await updatePhoneDisplay();
+        updateStats();
+        updateSendButton();
+        hideLoading();
+    }
+
+    function updateStats() {
+        document.getElementById('pendingCount').innerText = pendingAccounts.length;
+        document.getElementById('sentCount').innerText = sentAccounts.length;
+        document.getElementById('totalCreated').innerText = pendingAccounts.length + sentAccounts.length;
+        document.getElementById('pendingCountBadge').innerText = pendingAccounts.length;
+        document.getElementById('sentCountBadge').innerText = sentAccounts.length;
+    }
+
+    function updateSendButton() {
+        const btn = document.getElementById('sendAllBtn');
+        if (pendingAccounts.length > 0) {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    }
+
+    function renderPending() {
+        const container = document.getElementById('pendingList');
+        if (pendingAccounts.length === 0) {
+            container.innerHTML = '<div class="empty-state">📭 No pending accounts</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        pendingAccounts.forEach(acc => {
+            const vipDisplay = acc.vipLevel === 'NONE' ? 'Standard' : acc.vipLevel;
+            const div = document.createElement('div');
+            div.className = 'pending-item';
+            div.innerHTML = `
+                <div class="pending-phone">
+                    <span><i class="fa-solid fa-phone"></i> ${acc.phone}</span>
+                    <button class="copy-btn" style="padding:2px 6px;" onclick="copyToClipboard('${acc.phone}')">Copy</button>
+                </div>
+                <div class="pending-vip">VIP: ${vipDisplay}</div>
+                <div style="margin-top: 6px;">
+                    <button class="edit-vip-btn" onclick="editVIP('${acc.id}', '${acc.vipLevel}')"><i class="fa-solid fa-pen"></i> Edit VIP</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renderSent() {
+        const container = document.getElementById('sentList');
+        if (sentAccounts.length === 0) {
+            container.innerHTML = '<div class="empty-state">✅ No accounts in storage</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        sentAccounts.forEach(acc => {
+            const vipDisplay = acc.vipLevel === 'NONE' ? 'Standard' : acc.vipLevel;
+            const div = document.createElement('div');
+            div.className = 'sent-item';
+            div.innerHTML = `
+                <div class="sent-phone"><i class="fa-solid fa-check-circle" style="color:#10b981; font-size:0.5rem;"></i> ${acc.phone}</div>
+                <div class="sent-vip">VIP: ${vipDisplay}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // VIP Selection UI
+    document.querySelectorAll('.vip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.vip-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedVIP = btn.dataset.vip;
+        });
+    });
+    document.querySelector('.vip-btn[data-vip="NONE"]').classList.add('active');
+
+    // Copy functions
+    window.copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        Swal.fire({ title: 'Copied!', text: text, icon: 'success', background: '#111424', color: '#fff', timer: 1000, showConfirmButton: false });
+    };
+    
+    document.getElementById('copyPhoneBtn').addEventListener('click', () => {
+        const phone = document.getElementById('phoneNumber').innerText;
+        navigator.clipboard.writeText(phone);
+        Swal.fire({ title: 'Copied!', text: phone, icon: 'success', background: '#111424', color: '#fff', timer: 1000, showConfirmButton: false });
+    });
+    
+    document.getElementById('copyPasswordBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(CONSTANT_PASSWORD);
+        Swal.fire({ title: 'Copied!', text: CONSTANT_PASSWORD, icon: 'success', background: '#111424', color: '#fff', timer: 1000, showConfirmButton: false });
+    });
+
+    // Create Account
+    document.getElementById('createAccountBtn').addEventListener('click', async () => {
+        if (pendingAccounts.length >= MAX_PENDING) {
+            Swal.fire({ 
+                title: 'Pending Queue Full', 
+                text: `Maximum ${MAX_PENDING} pending accounts. Send some first.`, 
+                icon: 'warning', 
+                background: '#111424', 
+                color: '#fff', 
+                confirmButtonColor: '#e5b842' 
+            });
+            return;
+        }
+        
+        const phone = document.getElementById('phoneNumber').innerText;
+        const exists = [...pendingAccounts, ...sentAccounts].some(a => a.phone === phone);
+        if (exists) {
+            Swal.fire({ 
+                title: 'Phone Exists', 
+                text: `Phone ${phone} already exists.`, 
+                icon: 'error', 
+                background: '#111424', 
+                color: '#fff', 
+                confirmButtonColor: '#e5b842' 
+            });
+            await updatePhoneDisplay();
+            return;
+        }
+        
+        await addDoc(collection(db, "adminPending"), {
+            phone: phone,
+            password: CONSTANT_PASSWORD,
+            vipLevel: selectedVIP,
+            username: `user_${phone.slice(-4)}`,
+            createdAt: new Date()
+        });
+        
+        await loadAllData();
+        Swal.fire({ 
+            title: 'Account Created!', 
+            text: `Account ${phone} added to pending.`, 
+            icon: 'success', 
+            background: '#111424', 
+            color: '#fff', 
+            timer: 1500, 
+            showConfirmButton: false 
+        });
+    });
+
+    // Edit VIP
+    window.editVIP = async (id, currentVIP) => {
+        const { value: newVIP } = await Swal.fire({
+            title: 'Edit VIP Level',
+            text: `Current: ${currentVIP === 'NONE' ? 'Standard' : currentVIP}`,
+            input: 'select',
+            inputOptions: {
+                'NONE': 'Standard',
+                'VIP1': 'VIP 1', 'VIP2': 'VIP 2', 'VIP3': 'VIP 3',
+                'VIP4': 'VIP 4', 'VIP5': 'VIP 5', 'VIP6': 'VIP 6', 'VIP7': 'VIP 7'
+            },
+            inputValue: currentVIP,
+            background: '#111424', 
+            color: '#fff', 
+            confirmButtonColor: '#e5b842', 
+            showCancelButton: true
+        });
+        if (newVIP && newVIP !== currentVIP) {
+            await updateDoc(doc(db, "adminPending", id), { vipLevel: newVIP });
+            await loadAllData();
+            Swal.fire({ 
+                title: 'Updated!', 
+                text: 'VIP level changed.', 
+                icon: 'success', 
+                background: '#111424', 
+                color: '#fff', 
+                timer: 1000, 
+                showConfirmButton: false 
+            });
+        }
+    };
+
+    // Send All to Storage
+    document.getElementById('sendAllBtn').addEventListener('click', async () => {
+        if (pendingAccounts.length === 0) return;
+        
+        const result = await Swal.fire({
+            title: 'Send All to Storage?',
+            text: `${pendingAccounts.length} account(s) will be moved to permanent storage.`,
+            icon: 'question',
+            background: '#111424', 
+            color: '#fff', 
+            confirmButtonColor: '#10b981', 
+            cancelButtonColor: '#ef4444', 
+            showCancelButton: true
+        });
+        
+        if (result.isConfirmed) {
+            Swal.fire({ 
+                title: 'Sending...', 
+                allowOutsideClick: false, 
+                didOpen: () => { Swal.showLoading(); } 
+            });
+            
+            for (const pending of pendingAccounts) {
+                await addDoc(collection(db, "adminSent"), {
+                    phone: pending.phone,
+                    username: pending.username,
+                    password: pending.password,
+                    vipLevel: pending.vipLevel,
+                    sentDate: new Date()
+                });
+                await deleteDoc(doc(db, "adminPending", pending.id));
+            }
+            
+            await loadAllData();
+            Swal.fire({ 
+                title: 'Sent Successfully!', 
+                text: `All ${pendingAccounts.length} accounts moved to storage.`, 
+                icon: 'success', 
+                background: '#111424', 
+                color: '#fff', 
+                confirmButtonColor: '#e5b842' 
+            });
+        }
+    });
+
+    document.getElementById('backBtn').addEventListener('click', () => { 
+        sessionStorage.setItem('nexusAdminSession', 'true');
+        window.location.href = "index.html"; 
+    });
+    
+    loadAllData();
+</script>
+</body>
+</html>
