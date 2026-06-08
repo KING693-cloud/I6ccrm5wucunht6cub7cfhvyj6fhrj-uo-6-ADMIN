@@ -1,0 +1,8 @@
+{
+    "name": "NEXUS EARN",
+    "short_name": "NEXUS",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#0a0c15",
+    "theme_color": "#e5b842"
+}
