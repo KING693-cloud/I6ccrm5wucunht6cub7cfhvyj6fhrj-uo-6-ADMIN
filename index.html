@@ -3,105 +3,668 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>NEXUS EARN - Executive Dashboard | Secure Enterprise</title>
+    <title>NEXUS EXECUTIVE · Enterprise Command Center</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #0a0c15; color: #fff; min-height: 100vh; overflow-x: hidden; }
-        
-        /* Enhanced Loading Overlay with Percentage */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #0a0c15;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Premium Loading Overlay */
         .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: linear-gradient(135deg, #0a0c15, #05070f);
-            z-index: 10000; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1);
             backdrop-filter: blur(2px);
         }
-        .loading-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .loading-overlay.hide {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         .loader-icon {
-            width: 100px; height: 100px; background: linear-gradient(145deg, #e5b842, #f5d061);
-            border-radius: 30px; display: flex; align-items: center; justify-content: center;
-            margin-bottom: 30px; animation: pulseGlow 1.8s infinite;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(145deg, #e5b842, #f5d061);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            animation: pulseGlow 1.8s infinite;
             box-shadow: 0 0 35px rgba(229,184,66,0.4);
         }
-        .loader-icon i { font-size: 52px; color: #0a0c15; }
-        @keyframes pulseGlow { 0%,100% { transform: scale(1); box-shadow: 0 0 20px rgba(229,184,66,0.4); } 50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(229,184,66,0.7); } }
-        .loader-text { font-size: 1.5rem; font-weight: 800; color: #e5b842; margin-bottom: 15px; letter-spacing: 4px; background: linear-gradient(135deg, #e5b842, #f5d061); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+        .loader-icon i {
+            font-size: 52px;
+            color: #0a0c15;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(229,184,66,0.4); }
+            50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(229,184,66,0.7); }
+        }
+
+        .loader-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e5b842, #f5d061);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: 4px;
+        }
+
         .loader-bar-container {
-            width: 320px; height: 6px; background: #1e244a; border-radius: 6px; overflow: hidden; margin: 10px 0;
+            width: 320px;
+            height: 6px;
+            background: #1e244a;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
         }
-        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e5b842, #f5d061, #e5b842); background-size: 200% auto; animation: shimmer 1.5s linear infinite; border-radius: 6px; transition: width 0.2s ease; }
-        @keyframes shimmer { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
-        .percentage-text { font-size: 1.3rem; font-weight: 800; color: #e5b842; margin-top: 12px; font-family: monospace; letter-spacing: 1px; }
-        .loading-status { font-size: 0.75rem; color: #9ca3af; margin-top: 12px; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 40px; }
-        .loader-dots { display: flex; gap: 10px; margin-top: 20px; }
-        .loader-dots span { width: 8px; height: 8px; background: #e5b842; border-radius: 50%; animation: bounce 1.4s infinite; opacity: 0.6; }
-        .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
-        
-        /* Password Modal Premium */
-        .password-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.98); z-index: 20000; display: flex;
-            align-items: center; justify-content: center; backdrop-filter: blur(12px);
+
+        .loader-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #e5b842, #f5d061, #e5b842);
+            background-size: 200% auto;
+            animation: shimmer 1.5s linear infinite;
+            border-radius: 6px;
+            transition: width 0.2s ease;
         }
-        .password-modal.hide { display: none; }
+
+        @keyframes shimmer {
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .percentage-text {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #e5b842;
+            margin-top: 12px;
+            font-family: monospace;
+        }
+
+        .loading-status {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 12px;
+            background: rgba(0,0,0,0.4);
+            padding: 6px 14px;
+            border-radius: 40px;
+        }
+
+        /* Password Modal */
+        .password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.98);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(12px);
+        }
+
+        .password-modal.hide {
+            display: none;
+        }
+
         .password-box {
-            background: #111424; border-radius: 32px; padding: 40px 35px; width: 90%; max-width: 420px;
-            text-align: center; border: 1px solid rgba(229,184,66,0.4); box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+            background: #111424;
+            border-radius: 32px;
+            padding: 40px 35px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid rgba(229,184,66,0.4);
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5);
             animation: fadeInUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .password-box i { font-size: 3.5rem; color: #e5b842; margin-bottom: 15px; }
-        .password-box h3 { font-size: 1.5rem; margin-bottom: 8px; }
-        .password-box p { font-size: 0.75rem; color: #9ca3af; margin-bottom: 25px; }
-        .password-box input {
-            width: 100%; background: #1b203a; border: 1px solid #2d345a; padding: 14px; border-radius: 16px;
-            color: #fff; font-size: 1.2rem; text-align: center; letter-spacing: 6px; font-weight: 700; outline: none;
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .password-box input:focus { border-color: #e5b842; box-shadow: 0 0 8px rgba(229,184,66,0.3); }
+
+        .password-box i {
+            font-size: 3.5rem;
+            color: #e5b842;
+            margin-bottom: 15px;
+        }
+
+        .password-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .password-box p {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 25px;
+        }
+
+        .password-box input {
+            width: 100%;
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 14px;
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 6px;
+            font-weight: 700;
+            outline: none;
+        }
+
+        .password-box input:focus {
+            border-color: #e5b842;
+            box-shadow: 0 0 8px rgba(229,184,66,0.3);
+        }
+
         .password-box button {
-            width: 100%; background: linear-gradient(135deg, #f5d061, #e5b842); border: none; padding: 14px;
-            border-radius: 16px; color: #111424; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 20px;
+            width: 100%;
+            background: linear-gradient(135deg, #f5d061, #e5b842);
+            border: none;
+            padding: 14px;
+            border-radius: 16px;
+            color: #111424;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
             transition: transform 0.1s ease;
         }
-        .password-box button:active { transform: scale(0.97); }
-        
-        .admin-container { max-width: 1400px; margin: 0 auto; padding: 20px; display: none; }
-        .header { background: #111424; border-radius: 20px; padding: 15px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border: 1px solid rgba(229,184,66,0.15); backdrop-filter: blur(4px); }
-        .logo h2 { color: #e5b842; font-size: 1.3rem; letter-spacing: -0.3px; }
-        .logo p { font-size: 0.65rem; color: #9ca3af; }
-        .notification-bell { position: relative; cursor: pointer; width: 42px; height: 42px; background: rgba(229,184,66,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .notification-bell:hover { background: rgba(229,184,66,0.25); transform: scale(1.05); }
-        .notification-bell i { font-size: 1.2rem; color: #e5b842; }
-        .notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 12px; min-width: 18px; text-align: center; box-shadow: 0 0 6px #ef4444; }
-        .notification-panel { position: fixed; top: 85px; right: 20px; width: 360px; max-height: 520px; background: #111424e6; backdrop-filter: blur(12px); border-radius: 20px; border: 1px solid rgba(229,184,66,0.3); z-index: 1000; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
-        .notification-panel.active { display: flex; }
-        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: linear-gradient(135deg, #1b203a, #13172c); border-radius: 18px; padding: 16px 10px; text-align: center; border: 1px solid rgba(229,184,66,0.1); transition: transform 0.2s, border-color 0.2s; }
-        .stat-card:hover { transform: translateY(-4px); border-color: rgba(229,184,66,0.4); }
-        .stat-card i { font-size: 1.6rem; color: #e5b842; margin-bottom: 8px; display: block; }
-        .stat-card .number { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
-        .stat-card .label { font-size: 0.7rem; color: #9ca3af; margin-top: 5px; }
-        .chart-card { background: #111424; border-radius: 20px; border: 1px solid rgba(229,184,66,0.1); overflow: hidden; margin-bottom: 20px; }
-        .chart-header { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .chart-header h3 { color: #e5b842; font-size: 0.9rem; }
-        .chart-container { padding: 20px; height: 310px; position: relative; }
-        .section-card { background: #111424; border-radius: 20px; border: 1px solid rgba(229,184,66,0.1); overflow: hidden; }
-        .card-header { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        .table-container { overflow-x: auto; padding: 0 20px 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        th { color: #e5b842; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
-        td { font-size: 0.75rem; }
-        .badge { display: inline-block; padding: 3px 12px; border-radius: 30px; font-size: 0.6rem; font-weight: 600; }
+
+        .password-box button:active {
+            transform: scale(0.97);
+        }
+
+        /* Main Admin Container */
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+
+        /* Header */
+        .header {
+            background: #111424dd;
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 15px 24px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            border: 1px solid rgba(229,184,66,0.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .logo h2 {
+            color: #e5b842;
+            font-size: 1.3rem;
+            letter-spacing: -0.3px;
+        }
+
+        .logo p {
+            font-size: 0.65rem;
+            color: #9ca3af;
+        }
+
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            width: 42px;
+            height: 42px;
+            background: rgba(229,184,66,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .notification-bell:hover {
+            background: rgba(229,184,66,0.25);
+            transform: scale(1.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 12px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .notification-panel {
+            position: fixed;
+            top: 85px;
+            right: 20px;
+            width: 360px;
+            max-height: 520px;
+            background: #111424e6;
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(229,184,66,0.3);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+
+        .notification-panel.active {
+            display: flex;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .clear-all {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .notification-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: rgba(229,184,66,0.1);
+        }
+
+        .owner-badge {
+            background: rgba(229,184,66,0.1);
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            color: #e5b842;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-btn {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.4);
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: #10b981;
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .info-btn:hover {
+            background: rgba(16,185,129,0.3);
+            transform: scale(1.02);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1b203a, #13172c);
+            border-radius: 18px;
+            padding: 16px 10px;
+            text-align: center;
+            border: 1px solid rgba(229,184,66,0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(229,184,66,0.4);
+        }
+
+        .stat-card i {
+            font-size: 1.6rem;
+            color: #e5b842;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .stat-card .number {
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background: #111424cc;
+            border-radius: 20px;
+            border: 1px solid rgba(229,184,66,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-header h3 {
+            color: #e5b842;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            padding: 20px;
+            height: 310px;
+            position: relative;
+        }
+
+        /* Two Column Layout */
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Cards */
+        .admin-card {
+            background: #111424cc;
+            backdrop-filter: blur(4px);
+            border-radius: 24px;
+            border: 1px solid rgba(229,184,66,0.2);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #1b203a, #0f1325);
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            color: #e5b842;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .badge {
+            background: #e5b842;
+            color: #111424;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: #0a0c15;
+            border: 1px solid #2d345a;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #e5b842;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f5d061, #e5b842);
+            color: #111424;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(229,184,66,0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-success {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .btn-warning {
+            background: rgba(249,115,22,0.15);
+            border: 1px solid #f97316;
+            color: #f97316;
+        }
+
+        /* VIP Controls */
+        .vip-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .vip-control-item {
+            background: #0a0c15;
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2d345a;
+        }
+
+        .toggle-btn {
+            width: 44px;
+            height: 24px;
+            background: #2d345a;
+            border-radius: 30px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active {
+            background: #10b981;
+        }
+
+        .toggle-btn .toggle-slider {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 3px;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn.active .toggle-slider {
+            left: 21px;
+        }
+
+        /* User Search */
+        .user-result {
+            background: #0a0c15;
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 16px;
+            display: none;
+            border: 1px solid #2d345a;
+        }
+
+        .user-result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            padding: 0 20px 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            color: #e5b842;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 0.75rem;
+        }
+
+        .badge-vip1, .badge-vip2, .badge-vip3, .badge-vip4, .badge-vip5, .badge-vip6, .badge-vip7 {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 30px;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
         .badge-vip1 { background: rgba(229,184,66,0.15); color: #e5b842; }
         .badge-vip2 { background: rgba(192,132,252,0.15); color: #c084fc; }
         .badge-vip3 { background: rgba(59,130,246,0.15); color: #60a5fa; }
@@ -110,84 +673,298 @@
         .badge-vip6 { background: rgba(236,72,153,0.15); color: #ec4899; }
         .badge-vip7 { background: linear-gradient(135deg, rgba(229,184,66,0.2), rgba(229,184,66,0.05)); color: #e5b842; }
         .badge-standard { background: rgba(156,163,175,0.15); color: #9ca3af; }
-        .btn-sm { background: rgba(16,185,129,0.15); border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.65rem; font-weight: 600; color: #10b981; transition: 0.2s; }
-        .btn-sm:hover { background: rgba(16,185,129,0.3); }
-        .search-box input { background: #1b203a; border: 1px solid #2d345a; padding: 8px 14px; border-radius: 40px; color: #fff; width: 250px; outline: none; font-size: 0.75rem; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
-        .pagination button { background: #1b203a; border: 1px solid #2d345a; padding: 6px 14px; border-radius: 10px; color: #fff; cursor: pointer; font-size: 0.7rem; transition: 0.2s; }
-        .pagination button.active { background: #e5b842; color: #000; border-color: #e5b842; }
-        .owner-badge { background: rgba(229,184,66,0.1); padding: 4px 14px; border-radius: 40px; font-size: 0.7rem; color: #e5b842; display: flex; align-items: center; gap: 6px; }
-        .admin-btn { background: linear-gradient(135deg, #e5b842, #f5d061); border: none; padding: 8px 20px; border-radius: 40px; color: #111424; font-weight: 700; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
-        .enable-notif-btn { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); padding: 5px 14px; border-radius: 40px; color: #10b981; font-size: 0.7rem; cursor: pointer; }
-        .custom-toast { position: fixed; bottom: 25px; right: 25px; background: #1b203a; border-left: 5px solid #10b981; padding: 12px 20px; border-radius: 14px; display: flex; align-items: center; gap: 12px; z-index: 10000; transform: translateX(450px); transition: transform 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-        .custom-toast.show { transform: translateX(0); }
-        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } .notification-panel { width: 310px; } }
-        @media (max-width: 650px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .btn-sm {
+            background: rgba(16,185,129,0.15);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #10b981;
+            transition: 0.2s;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 6px 14px;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+
+        .pagination button.active {
+            background: #e5b842;
+            color: #000;
+            border-color: #e5b842;
+        }
+
+        .search-box input {
+            background: #1b203a;
+            border: 1px solid #2d345a;
+            padding: 8px 14px;
+            border-radius: 40px;
+            color: #fff;
+            width: 250px;
+            outline: none;
+            font-size: 0.75rem;
+        }
+
+        hr {
+            border-color: rgba(255,255,255,0.05);
+            margin: 16px 0;
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .two-columns { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 650px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .custom-toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #1b203a;
+            border-left: 5px solid #10b981;
+            padding: 12px 20px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            transform: translateX(450px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .custom-toast.show {
+            transform: translateX(0);
+        }
     </style>
 </head>
 <body>
 
 <div class="custom-toast" id="customToast"><i class="fa-solid fa-bell"></i><span id="toastMessage">Alert</span></div>
+
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loader-icon"><i class="fa-solid fa-chart-line"></i></div>
     <div class="loader-text">NEXUS EXECUTIVE</div>
     <div class="loader-bar-container"><div class="loader-bar-fill" id="progressFill"></div></div>
     <div class="percentage-text" id="progressPercent">0%</div>
     <div class="loading-status" id="loadingStatusMsg">🔐 Authenticating session...</div>
-    <div class="loader-dots"><span></span><span></span><span></span></div>
 </div>
 
 <div class="password-modal" id="passwordModal">
-    <div class="password-box"><i class="fa-solid fa-shield-haltered"></i><h3>EXECUTIVE VAULT</h3><p>Enter 5-digit security code</p>
-    <input type="password" id="adminPasswordInput" placeholder="● ● ● ● ●" maxlength="10" autocomplete="off">
-    <button id="verifyPasswordBtn"><i class="fa-solid fa-key"></i> UNLOCK DASHBOARD</button></div>
+    <div class="password-box">
+        <i class="fa-solid fa-shield-halved"></i>
+        <h3>EXECUTIVE VAULT</h3>
+        <p>Enter 5-digit security code</p>
+        <input type="password" id="adminPasswordInput" placeholder="● ● ● ● ●" maxlength="10" autocomplete="off">
+        <button id="verifyPasswordBtn"><i class="fa-solid fa-key"></i> UNLOCK DASHBOARD</button>
+    </div>
 </div>
 
 <div class="notification-panel" id="notificationPanel">
-    <div class="notification-header"><h4><i class="fa-regular fa-bell"></i> Live Alerts</h4><button class="clear-all" id="clearAllNotifBtn">Clear all</button></div>
+    <div class="notification-header">
+        <h4><i class="fa-regular fa-bell"></i> Live Alerts</h4>
+        <button class="clear-all" id="clearAllNotifBtn">Clear all</button>
+    </div>
     <div class="notification-list" id="notificationList"><div style="text-align:center; padding:20px; color:#636b8f;">No notifications</div></div>
 </div>
 
 <div class="admin-container" id="mainContent">
     <div class="header">
-        <div class="logo"><h2><i class="fa-solid fa-chart-simple"></i> NEXUS EXECUTIVE</h2><p>Enterprise Command Center</p></div>
+        <div class="logo">
+            <h2><i class="fa-solid fa-chart-simple"></i> NEXUS EXECUTIVE</h2>
+            <p>Enterprise Command Center | VIP 1-13 | Real-time Analytics</p>
+        </div>
         <div style="display: flex; gap: 12px; align-items: center;">
-            <div class="notification-bell" id="notificationBell"><i class="fa-regular fa-bell"></i><span class="notification-badge" id="notifBadge" style="display: none;">0</span></div>
-            <button class="enable-notif-btn" id="enableNotifBtn"><i class="fa-solid fa-bell"></i> Enable Alerts</button>
-            <div class="discussions-circle" id="discussionsBtn" style="width:40px;height:40px;background:linear-gradient(135deg,#e5b842,#f5d061);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="fa-solid fa-comments" style="color:#111424;"></i></div>
+            <button class="info-btn" id="announcementBtn"><i class="fa-solid fa-bullhorn"></i> Announcements</button>
+            <div class="notification-bell" id="notificationBell">
+                <i class="fa-regular fa-bell"></i>
+                <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
+            </div>
             <div class="owner-badge"><i class="fa-solid fa-crown"></i> DANIEL</div>
-            <button class="admin-btn" id="adminUsersBtn"><i class="fa-solid fa-user-gear"></i> ADMIN USERS</button>
         </div>
     </div>
+
+    <!-- Stats Row -->
     <div class="stats-grid">
         <div class="stat-card"><i class="fa-solid fa-users"></i><div class="number" id="totalUsers">0</div><div class="label">Total Users</div></div>
         <div class="stat-card"><i class="fa-solid fa-user-plus"></i><div class="number" id="newUsersThisMonth">0</div><div class="label">New This Month</div></div>
         <div class="stat-card"><i class="fa-solid fa-crown"></i><div class="number" id="totalVIP">0</div><div class="label">VIP Members</div></div>
         <div class="stat-card"><i class="fa-solid fa-wallet"></i><div class="number" id="totalBalance">₦0</div><div class="label">Total Balance</div></div>
-        <div class="stat-card"><i class="fa-solid fa-money-bill-wave"></i><div class="number" id="totalDeposited">₦0</div><div class="label">Total Deposited</div></div>
+        <div class="stat-card"><i class="fa-solid fa-toggle-on"></i><div class="number" id="systemStatus">ACTIVE</div><div class="label">System Status</div></div>
     </div>
-    <div class="chart-card"><div class="chart-header"><h3><i class="fa-solid fa-chart-line"></i> User Growth Analytics</h3><select id="yearSelect" style="background:#1b203a; border-radius:20px; padding:5px 10px; color:#fff; border:1px solid #2d345a;"><option value="2024">2024</option><option value="2025" selected>2025</option><option value="2026">2026</option></select></div><div class="chart-container"><canvas id="userGrowthChart"></canvas></div></div>
-    <div class="section-card"><div class="card-header"><h3><i class="fa-solid fa-database"></i> User Directory</h3><div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search by name or phone..."></div></div><div class="table-container"><table><thead><tr><th>User ID</th><th>Username</th><th>Phone</th><th>VIP Level</th><th>Balance</th><th>Deposited</th><th>Joined</th><th>Action</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="8" style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-pulse"></i> Loading secure data...</td></tr></tbody></table><div class="pagination" id="pagination"></div></div></div>
+
+    <!-- Growth Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3><i class="fa-solid fa-chart-line"></i> User Growth Analytics</h3>
+            <select id="yearSelect" style="background:#1b203a; border-radius:20px; padding:5px 10px; color:#fff; border:1px solid #2d345a;">
+                <option value="2024">2024</option>
+                <option value="2025" selected>2025</option>
+                <option value="2026">2026</option>
+            </select>
+        </div>
+        <div class="chart-container"><canvas id="userGrowthChart"></canvas></div>
+    </div>
+
+    <!-- Two Columns for Controls -->
+    <div class="two-columns">
+        <!-- LEFT COLUMN -->
+        <div>
+            <!-- VIP Plan Controls -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-crown"></i> VIP Plan Controls</h3>
+                    <span class="badge">Toggle Activate Buttons</span>
+                </div>
+                <div class="card-body">
+                    <p style="font-size: 0.7rem; color: #9ca3af; margin-bottom: 16px;">Enable/Disable the "Activate Plan" button for each VIP tier.</p>
+                    <div class="vip-controls" id="vipControlsList"></div>
+                </div>
+            </div>
+
+            <!-- User Management -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-user-pen"></i> User Management</h3>
+                    <span class="badge">Search & Edit</span>
+                </div>
+                <div class="card-body">
+                    <div class="search-row" style="display: flex; gap: 12px;">
+                        <input type="text" class="form-control" id="userSearchInput" placeholder="Search by Phone, Username, or UID...">
+                        <button class="btn btn-primary" id="searchUserBtn"><i class="fa-solid fa-search"></i> Search</button>
+                    </div>
+                    <div id="userResultPanel" class="user-result">
+                        <div class="user-info-row"><span class="user-info-label">UID:</span><span class="user-info-value" id="resultUid">-</span></div>
+                        <div class="user-info-row"><span class="user-info-label">Username:</span><span class="user-info-value" id="resultUsername">-</span></div>
+                        <div class="user-info-row"><span class="user-info-label">Phone:</span><span class="user-info-value" id="resultPhone">-</span></div>
+                        <div class="user-info-row"><span class="user-info-label">VIP Tier:</span><span class="user-info-value" id="resultTier">-</span></div>
+                        <div class="user-info-row"><span class="user-info-label">Days Left:</span><span class="user-info-value" id="resultDays">-</span></div>
+                        <div class="user-info-row"><span class="user-info-label">Balance:</span><span class="user-info-value" id="resultBalance">-</span></div>
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" id="extendDaysBtn"><i class="fa-solid fa-calendar-plus"></i> +10 Days</button>
+                            <button class="btn btn-success" id="resetDaysBtn"><i class="fa-solid fa-rotate-left"></i> Reset 40 Days</button>
+                            <button class="btn btn-danger" id="downgradeUserBtn"><i class="fa-solid fa-arrow-down"></i> Downgrade</button>
+                            <button class="btn btn-primary" id="addBalanceBtn"><i class="fa-solid fa-plus-circle"></i> +₦10,000</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+            <!-- Broadcast System -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-bullhorn"></i> Global Broadcast</h3>
+                    <span class="badge">Send to All</span>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" id="broadcastMessage" rows="3" placeholder="Type your announcement here..."></textarea>
+                    <select class="form-control" id="broadcastType" style="margin-top: 12px;">
+                        <option value="info">📢 Information</option>
+                        <option value="success">✅ Success</option>
+                        <option value="warning">⚠️ Warning</option>
+                        <option value="error">🔴 Critical</option>
+                    </select>
+                    <button class="btn btn-primary" id="sendBroadcastBtn" style="margin-top: 16px; width: 100%;"><i class="fa-solid fa-paper-plane"></i> Send Broadcast</button>
+                </div>
+            </div>
+
+            <!-- System Configuration -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-sliders-h"></i> System Configuration</h3>
+                    <span class="badge">Global Rules</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Maintenance Mode</label>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-danger" id="enableMaintenanceBtn">Enable</button>
+                            <button class="btn btn-success" id="disableMaintenanceBtn">Disable</button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <label>Referral Commission Rate (%)</label>
+                        <input type="number" class="form-control" id="referralRate" value="10">
+                        <button class="btn btn-primary" id="updateReferralRateBtn" style="margin-top: 8px; width: 100%;">Update Commission</button>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <label>Check-In Bonus (₦)</label>
+                        <input type="number" class="form-control" id="checkinBonus" value="50">
+                        <button class="btn btn-primary" id="updateCheckinBtn" style="margin-top: 8px; width: 100%;">Update Bonus</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Directory Table -->
+    <div class="admin-card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-database"></i> User Directory</h3>
+            <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search by name or phone..."></div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Username</th><th>Phone</th><th>VIP Level</th><th>Balance</th><th>Deposited</th><th>Joined</th><th>Action</th></tr>
+                </thead>
+                <tbody id="usersTableBody"><tr><td colspan="8" style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-pulse"></i> Loading secure data...</td></tr></tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, query, where, onSnapshot, doc, setDoc, addDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
+    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, query, where, setDoc, addDoc, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyDUIQ5s-MI2V3rsi_uWBbRb5YGcFmjjKK4", authDomain: "nexus-earn-1.firebaseapp.com", projectId: "nexus-earn-1", storageBucket: "nexus-earn-1.firebasestorage.app", messagingSenderId: "779765076952", appId: "1:779765076952:web:fa5fac51bef82e74b598ad" };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDUIQ5s-MI2V3rsi_uWBbRb5YGcFmjjKK4",
+        authDomain: "nexus-earn-1.firebaseapp.com",
+        projectId: "nexus-earn-1",
+        storageBucket: "nexus-earn-1.firebasestorage.app",
+        messagingSenderId: "779765076952",
+        appId: "1:779765076952:web:fa5fac51bef82e74b598ad"
+    };
+
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app);
-    const messaging = getMessaging(app);
-    const VAPID_KEY = "BNVspgdAM2DSbGJ7OMbZiy57LKt4uvsOb4twi_1bDvsSs16x-A3NHT3JM06vJCSTbm5wcFsv6428PyvsnV9sgTM";
+
+    const ADMIN_CODE = "SEVENS";
+    const settingsRef = doc(db, "admin_settings", "platform_config");
+    const VIP_TIERS = ["VIP1", "VIP2", "VIP3", "VIP4", "VIP5", "VIP6", "VIP7", "VIP8", "VIP9", "VIP10", "VIP11", "VIP12", "VIP13"];
 
     let allUsers = [], currentPage = 1, currentSearch = "", userChart = null, notifications = [], unreadCount = 0;
-    let permissionGranted = false, fcmTokenSaved = false, isInitialSnapshot = true;
-    const ADMIN_CODE = "SEVENS";
+    let currentSettings = { maintenanceMode: false, disabledVIPs: [] };
     const perPage = 15;
 
-    // Loading progress helpers
+    // Loading progress
     let currentProgress = 0;
     function setProgress(percent, statusText) {
         currentProgress = Math.min(99, Math.max(0, percent));
@@ -199,123 +976,468 @@
         if (statusEl && statusText) statusEl.innerText = statusText;
     }
 
-    function hideLoadingAndShow() { 
+    function hideLoadingAndShow() {
         document.getElementById('mainContent').style.display = 'block';
         const loader = document.getElementById('loadingOverlay');
         loader.classList.add('hide');
         setTimeout(() => loader.style.display = 'none', 600);
     }
 
-    function showCustomToast(msg) { const t = document.getElementById('customToast'); document.getElementById('toastMessage').innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3200); }
-    function playNotifSound() { new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play().catch(e=>{}); }
-    
+    function showToast(msg) {
+        const t = document.getElementById('customToast');
+        document.getElementById('toastMessage').innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3200);
+    }
+
+    function playNotifSound() {
+        new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play().catch(e => {});
+    }
+
     async function addNotification(title, message) {
         const notif = { id: Date.now(), title, message, timestamp: new Date(), read: false };
-        notifications.unshift(notif); if (notifications.length > 60) notifications.pop();
-        unreadCount++; updateNotifBadge(); renderNotifList();
-        try { await addDoc(collection(db, "adminNotifications"), { title, message, timestamp: new Date() }); } catch(e) {}
-        if (permissionGranted && Notification.permission === 'granted') new Notification(title, { body: message, icon: '/logo.png' });
-        showCustomToast(message); playNotifSound();
-    }
-    function updateNotifBadge() { const b = document.getElementById('notifBadge'); if (unreadCount > 0) { b.style.display = 'flex'; b.innerText = unreadCount > 9 ? '9+' : unreadCount; } else b.style.display = 'none'; }
-    function renderNotifList() { const container = document.getElementById('notificationList'); if(!notifications.length){ container.innerHTML='<div style="text-align:center; padding:20px;">✨ No alerts</div>'; return; }
-        container.innerHTML = ''; notifications.forEach(n=>{ const div = document.createElement('div'); div.className = `notification-item ${!n.read ? 'unread' : ''}`; div.onclick = ()=>{ if(!n.read){ n.read=true; unreadCount--; updateNotifBadge(); renderNotifList(); } };
-        div.innerHTML = `<div class="notification-icon"><i class="fa-solid fa-user-plus"></i></div><div class="notification-content"><div class="notification-title">${escapeHtml(n.title)}</div><div class="notification-message">${escapeHtml(n.message)}</div><div class="notification-time">${new Date(n.timestamp).toLocaleTimeString()}</div></div>`; container.appendChild(div); });
-    }
-    async function requestNotifPermission() { if ('Notification' in window) { const perm = await Notification.requestPermission(); permissionGranted = (perm === 'granted'); if(permissionGranted) { showCustomToast('✅ Notifications active'); await getAndSaveFCMToken(); } else showCustomToast('⚠️ Notifications blocked'); } }
-    async function getAndSaveFCMToken() { if(fcmTokenSaved) return; try { const token = await getToken(messaging, { vapidKey: VAPID_KEY }); if(token) { await setDoc(doc(db, "adminTokens", "admin"), { token, updatedAt: new Date() }); fcmTokenSaved=true; } } catch(e){} }
-    onMessage(messaging, (p) => { if(p.notification) addNotification(p.notification.title || 'Alert', p.notification.body || 'New event'); });
-
-    // Efficient data loading with progress
-    async function loadFullDashboard() {
+        notifications.unshift(notif);
+        if (notifications.length > 60) notifications.pop();
+        unreadCount++;
+        updateNotifBadge();
+        renderNotifList();
         try {
-            setProgress(5, "🔄 Fetching user base...");
-            const usersSnap = await getDocs(collection(db, "users"));
-            allUsers = []; const userMap = new Map();
-            usersSnap.forEach(doc => { const data = doc.data(); let joinDate = null;
-                if(data.createdAt){ if(data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds*1000); else if(data.createdAt.toDate) joinDate = data.createdAt.toDate(); }
-                const userObj = { id: doc.id, username: data.username || data.phone || "User", phone: data.phone || "-", balance: data.balance || 0, tierCode: data.tierCode || "NONE", totalDeposited: 0, createdAt: joinDate };
-                allUsers.push(userObj); userMap.set(doc.id, userObj);
-            });
-            setProgress(35, "📊 Aggregating financial records...");
-            const ledgerSnap = await getDocs(collection(db, "ledger"));
-            const depositSum = new Map();
-            ledgerSnap.forEach(doc => { const ld = doc.data(); const uid = ld.uid; const title = (ld.title || "").toLowerCase(); if(title.includes("paystack") || title.includes("deposit") || ld.type === "deposit") { const amt = ld.amount || 0; depositSum.set(uid, (depositSum.get(uid) || 0) + amt); } });
-            allUsers.forEach(u => { u.totalDeposited = depositSum.get(u.id) || 0; });
-            setProgress(65, "🔔 Loading notification history...");
-            const notifSnap = await getDocs(query(collection(db, "adminNotifications"), orderBy("timestamp", "desc"), limit(35)));
-            notifications = []; notifSnap.forEach(doc => notifications.push({ id: doc.id, ...doc.data(), read: true }));
-            unreadCount = 0; updateNotifBadge(); renderNotifList();
-            setProgress(85, "📈 Building analytics & charts...");
-            const now = new Date(); const currentYear = now.getFullYear(); const currentMonth = now.getMonth();
-            let newUsersThisMonth = 0; const monthlyMap = {};
-            allUsers.forEach(u => { if(u.createdAt){ const y = u.createdAt.getFullYear(); const m = u.createdAt.getMonth(); const key = `${y}-${m+1}`; monthlyMap[key] = (monthlyMap[key] || 0) + 1; if(y === currentYear && m === currentMonth) newUsersThisMonth++; } });
-            const totalVIP = allUsers.filter(u => u.tierCode !== "NONE").length;
-            const totalBalance = allUsers.reduce((s,u) => s + (u.balance || 0), 0);
-            const totalDepositedSum = allUsers.reduce((s,u) => s + (u.totalDeposited || 0), 0);
-            animateNumber('totalUsers', allUsers.length); animateNumber('newUsersThisMonth', newUsersThisMonth); animateNumber('totalVIP', totalVIP);
-            animateNumberCurrency('totalBalance', totalBalance); animateNumberCurrency('totalDeposited', totalDepositedSum);
-            buildChartData(monthlyMap, currentYear);
-            renderUsers();
-            setProgress(100, "✅ Dashboard ready. Welcome, Director.");
-            setTimeout(() => { hideLoadingAndShow(); }, 300);
-            startRealtimeNewUserListener();
-        } catch(err) { console.error(err); document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="8" style="color:#ef4444; text-align:center;">⚠️ Failed to load data: ${err.message}</td></tr>`; setProgress(100, "⚠️ Loaded with errors, retry refresh"); setTimeout(()=>hideLoadingAndShow(),1200); }
+            await addDoc(collection(db, "adminNotifications"), { title, message, timestamp: new Date() });
+        } catch(e) {}
+        showToast(message);
+        playNotifSound();
     }
 
-    function startRealtimeNewUserListener() {
-        const usersRef = collection(db, "users");
-        const q = query(usersRef, orderBy("createdAt", "desc"));
-        onSnapshot(q, (snapshot) => {
-            if (isInitialSnapshot) { isInitialSnapshot = false; return; }
-            snapshot.docChanges().forEach(change => {
-                if (change.type === 'added') {
-                    const data = change.doc.data();
-                    let joinDate = null; if(data.createdAt){ if(data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds*1000); else if(data.createdAt.toDate) joinDate = data.createdAt.toDate(); }
-                    const newUser = { id: change.doc.id, username: data.username || data.phone || "New User", phone: data.phone || "-", balance: data.balance || 0, tierCode: data.tierCode || "NONE", totalDeposited: 0, createdAt: joinDate };
-                    if(!allUsers.some(u=>u.id === newUser.id)) {
-                        allUsers.unshift(newUser);
-                        addNotification("🆕 New Registration", `${newUser.username} just joined NEXUS! ${newUser.phone !== "-" ? "📞 "+newUser.phone : ""}`);
-                        renderUsers(); 
-                        const totalUsers = allUsers.length, totalVIP = allUsers.filter(u=>u.tierCode!=="NONE").length;
-                        animateNumber('totalUsers', totalUsers); animateNumber('totalVIP', totalVIP);
-                    }
+    function updateNotifBadge() {
+        const b = document.getElementById('notifBadge');
+        if (unreadCount > 0) {
+            b.style.display = 'flex';
+            b.innerText = unreadCount > 9 ? '9+' : unreadCount;
+        } else {
+            b.style.display = 'none';
+        }
+    }
+
+    function renderNotifList() {
+        const container = document.getElementById('notificationList');
+        if (!notifications.length) {
+            container.innerHTML = '<div style="text-align:center; padding:20px;">✨ No alerts</div>';
+            return;
+        }
+        container.innerHTML = '';
+        notifications.forEach(n => {
+            const div = document.createElement('div');
+            div.className = 'notification-item';
+            div.onclick = () => {
+                if (!n.read) {
+                    n.read = true;
+                    unreadCount--;
+                    updateNotifBadge();
+                    renderNotifList();
+                }
+            };
+            div.innerHTML = `<div><strong>${escapeHtml(n.title)}</strong></div><div style="font-size:0.7rem; color:#9ca3af;">${escapeHtml(n.message)}</div><div style="font-size:0.6rem; margin-top:5px;">${new Date(n.timestamp).toLocaleTimeString()}</div>`;
+            container.appendChild(div);
+        });
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Load settings
+    async function loadSettings() {
+        try {
+            const docSnap = await getDoc(settingsRef);
+            if (docSnap.exists()) {
+                currentSettings = docSnap.data();
+            } else {
+                const defaultSettings = {
+                    disabledVIPs: [], maintenanceMode: false,
+                    referralCommissionRate: 10, checkinBonus: 50
+                };
+                await setDoc(settingsRef, defaultSettings);
+                currentSettings = defaultSettings;
+            }
+            document.getElementById('referralRate').value = currentSettings.referralCommissionRate || 10;
+            document.getElementById('checkinBonus').value = currentSettings.checkinBonus || 50;
+            document.getElementById('systemStatus').innerHTML = currentSettings.maintenanceMode ? 'MAINTENANCE' : 'ACTIVE';
+            document.getElementById('systemStatus').style.color = currentSettings.maintenanceMode ? '#f97316' : '#10b981';
+            renderVIPControls();
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function renderVIPControls() {
+        const container = document.getElementById('vipControlsList');
+        const disabledVIPs = currentSettings.disabledVIPs || [];
+        container.innerHTML = '';
+        VIP_TIERS.forEach(tier => {
+            const isDisabled = disabledVIPs.includes(tier);
+            const div = document.createElement('div');
+            div.className = 'vip-control-item';
+            div.innerHTML = `
+                <div>
+                    <div class="vip-name">${tier}</div>
+                    <div style="font-size:0.65rem; color:${isDisabled ? '#ef4444' : '#10b981'}">${isDisabled ? 'DISABLED' : 'ENABLED'}</div>
+                </div>
+                <div class="toggle-btn ${!isDisabled ? 'active' : ''}" data-tier="${tier}">
+                    <div class="toggle-slider"></div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const tier = btn.getAttribute('data-tier');
+                const currentlyDisabled = (currentSettings.disabledVIPs || []).includes(tier);
+                let newList = [...(currentSettings.disabledVIPs || [])];
+                if (currentlyDisabled) {
+                    newList = newList.filter(t => t !== tier);
+                    addNotification("VIP Enabled", `${tier} activation is now ENABLED`);
+                } else {
+                    newList.push(tier);
+                    addNotification("VIP Disabled", `${tier} activation is now DISABLED`);
+                }
+                await updateDoc(settingsRef, { disabledVIPs: newList });
+                currentSettings.disabledVIPs = newList;
+                renderVIPControls();
+            });
+        });
+    }
+
+    // Load dashboard data
+    async function loadDashboard() {
+        try {
+            setProgress(5, "Fetching user data...");
+            const usersSnap = await getDocs(collection(db, "users"));
+            allUsers = [];
+            usersSnap.forEach(doc => {
+                const data = doc.data();
+                let joinDate = null;
+                if (data.createdAt) {
+                    if (data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds * 1000);
+                    else if (data.createdAt.toDate) joinDate = data.createdAt.toDate();
+                }
+                allUsers.push({
+                    id: doc.id, username: data.username || data.phone || "User", phone: data.phone || "-",
+                    balance: data.balance || 0, tierCode: data.tierCode || "NONE",
+                    totalDeposited: data.totalDepositedAmount || 0, createdAt: joinDate,
+                    contractDaysRemaining: data.contractDaysRemaining || 0
+                });
+            });
+            setProgress(50, "Calculating statistics...");
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            let newUsersThisMonth = 0;
+            const monthlyMap = {};
+            allUsers.forEach(u => {
+                if (u.createdAt) {
+                    const y = u.createdAt.getFullYear();
+                    const m = u.createdAt.getMonth();
+                    const key = `${y}-${m+1}`;
+                    monthlyMap[key] = (monthlyMap[key] || 0) + 1;
+                    if (y === currentYear && m === currentMonth) newUsersThisMonth++;
                 }
             });
-        }, err=>console.warn("Snapshot error", err));
+            const totalVIP = allUsers.filter(u => u.tierCode !== "NONE").length;
+            const totalBalance = allUsers.reduce((s, u) => s + (u.balance || 0), 0);
+            document.getElementById('totalUsers').innerText = allUsers.length;
+            document.getElementById('newUsersThisMonth').innerText = newUsersThisMonth;
+            document.getElementById('totalVIP').innerText = totalVIP;
+            document.getElementById('totalBalance').innerHTML = "₦" + totalBalance.toLocaleString();
+            setProgress(80, "Building chart...");
+            const ctx = document.getElementById('userGrowthChart').getContext('2d');
+            if (userChart) userChart.destroy();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const counts = [];
+            for (let i = 0; i < 12; i++) counts.push(monthlyMap[`${currentYear}-${i+1}`] || 0);
+            let cum = 0;
+            const cumArr = counts.map(v => { cum += v; return cum; });
+            userChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'New Users', data: counts, borderColor: '#e5b842', backgroundColor: 'rgba(229,184,66,0.1)', borderWidth: 2.5, fill: true, tension: 0.3 },
+                        { label: 'Cumulative', data: cumArr, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 2, borderDash: [6, 6] }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } } }
+            });
+            setProgress(100, "Dashboard ready");
+            renderUsers();
+            setTimeout(() => hideLoadingAndShow(), 500);
+        } catch (err) {
+            console.error(err);
+            setProgress(100, "Error loading data");
+        }
     }
 
-    function buildChartData(monthlyMap, year) { const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; const counts=[]; for(let i=0;i<12;i++){ counts.push(monthlyMap[`${year}-${i+1}`] || 0); } let cum=0; const cumArr=counts.map(v=>{ cum+=v; return cum; });
-        const ctx = document.getElementById('userGrowthChart').getContext('2d'); if(userChart) userChart.destroy();
-        userChart = new Chart(ctx, { type:'line', data:{ labels:months, datasets:[{ label:'New Users (Monthly)', data:counts, borderColor:'#e5b842', backgroundColor:'rgba(229,184,66,0.1)', borderWidth:2.5, fill:true, tension:0.3 },{ label:'Total Cumulative', data:cumArr, borderColor:'#10b981', backgroundColor:'transparent', borderWidth:2, borderDash:[6,6], fill:false }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#fff' } } } } }); }
+    function renderUsers() {
+        let filtered = allUsers.filter(u => !currentSearch || u.username.toLowerCase().includes(currentSearch.toLowerCase()) || u.phone.includes(currentSearch));
+        const start = (currentPage - 1) * perPage;
+        const paginated = filtered.slice(start, start + perPage);
+        const tbody = document.getElementById('usersTableBody');
+        if (!paginated.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No records</td></tr>';
+        } else {
+            tbody.innerHTML = '';
+            paginated.forEach(u => {
+                const tierDisplay = u.tierCode === "NONE" ? "Standard" : u.tierCode;
+                let badgeClass = "badge-standard";
+                if (u.tierCode === "VIP1") badgeClass = "badge-vip1";
+                else if (u.tierCode === "VIP2") badgeClass = "badge-vip2";
+                else if (u.tierCode === "VIP3") badgeClass = "badge-vip3";
+                else if (u.tierCode === "VIP4") badgeClass = "badge-vip4";
+                else if (u.tierCode === "VIP5") badgeClass = "badge-vip5";
+                else if (u.tierCode === "VIP6") badgeClass = "badge-vip6";
+                else if (u.tierCode !== "NONE") badgeClass = "badge-vip7";
+                tbody.innerHTML += `<tr>
+                    <td><small>${u.id.slice(0, 8)}...</small></td>
+                    <td><strong>${escapeHtml(u.username)}</strong></td>
+                    <td>${u.phone}</td>
+                    <td><span class="${badgeClass}">${tierDisplay}</span></td>
+                    <td style="color:#10b981;">₦${(u.balance || 0).toLocaleString()}</td>
+                    <td style="color:#e5b842;">₦${(u.totalDeposited || 0).toLocaleString()}</td>
+                    <td><small>${u.createdAt ? u.createdAt.toLocaleDateString() : '-'}</small></td>
+                    <td><button class="btn-sm" onclick="window.viewUser('${u.id}')"><i class="fa-solid fa-eye"></i> View</button></td>
+                </tr>`;
+            });
+        }
+        const totalPages = Math.ceil(filtered.length / perPage);
+        let pages = '';
+        for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+            pages += `<button class="${i === currentPage ? 'active' : ''}" onclick="window.goToPage(${i})">${i}</button>`;
+        }
+        document.getElementById('pagination').innerHTML = pages;
+    }
 
-    function animateNumber(id, target) { const el = document.getElementById(id); if(!el) return; let curr=0; const step=Math.ceil(target/45); const timer=setInterval(()=>{ curr+=step; if(curr>=target){ el.innerText=target.toLocaleString(); clearInterval(timer); } else el.innerText=curr.toLocaleString(); }, 18); }
-    function animateNumberCurrency(id, target) { const el = document.getElementById(id); if(!el) return; let curr=0; const step=Math.ceil(target/45); const timer=setInterval(()=>{ curr+=step; if(curr>=target){ el.innerHTML='₦'+target.toLocaleString(); clearInterval(timer); } else el.innerHTML='₦'+curr.toLocaleString(); }, 18); }
-    function getVipBadge(tier) { if(tier==="NONE") return "badge-standard"; const map={ VIP1:"badge-vip1", VIP2:"badge-vip2", VIP3:"badge-vip3", VIP4:"badge-vip4", VIP5:"badge-vip5", VIP6:"badge-vip6" }; return map[tier] || "badge-vip7"; }
-    function renderUsers() { let filtered = allUsers.filter(u=> !currentSearch || u.username.toLowerCase().includes(currentSearch.toLowerCase()) || u.phone.includes(currentSearch)); const start=(currentPage-1)*perPage; const paginated=filtered.slice(start, start+perPage); const tbody=document.getElementById('usersTableBody'); if(!paginated.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;">No records</td></tr>'; } else { tbody.innerHTML=''; paginated.forEach(u=>{ const tierDisplay= u.tierCode==="NONE"?"Standard":u.tierCode; const joinDate= u.createdAt ? u.createdAt.toLocaleDateString() : '-'; tbody.innerHTML+=`<tr><td><small>${u.id.slice(0,8)}...</small></td><td><strong>${escapeHtml(u.username)}</strong></td><td>${u.phone}</td><td><span class="badge ${getVipBadge(u.tierCode)}">${tierDisplay}</span></td><td style="color:#10b981;">₦${(u.balance||0).toLocaleString()}</td><td style="color:#e5b842;">₦${(u.totalDeposited||0).toLocaleString()}</td><td><small>${joinDate}</small></td><td><button class="btn-sm" onclick="window.viewUserDetails('${u.id}')"><i class="fa-solid fa-eye"></i> View</button></td></tr>`; }); } const totalPages=Math.ceil(filtered.length/perPage); let pages=''; for(let i=1;i<=Math.min(totalPages,12);i++) pages+=`<button class="${i===currentPage?'active':''}" onclick="window.goToPageNum(${i})">${i}</button>`; document.getElementById('pagination').innerHTML=pages; }
-    window.viewUserDetails = (id) => { const u = allUsers.find(x=>x.id===id); if(u) Swal.fire({ title: u.username, html: `<div style="text-align:left;"><p><strong>User ID:</strong> ${u.id}</p><p><strong>Username:</strong> ${u.username}</p><p><strong>Phone:</strong> ${u.phone}</p><p><strong>Balance:</strong> ₦${(u.balance||0).toLocaleString()}</p><p><strong>VIP:</strong> ${u.tierCode}</p><p><strong>Total Deposited:</strong> ₦${(u.totalDeposited||0).toLocaleString()}</p><p><strong>Joined:</strong> ${u.createdAt ? u.createdAt.toLocaleString() : '-'}</p></div>`, background:'#111424', color:'#fff', confirmButtonColor:'#e5b842' }); };
-    window.goToPageNum = (p) => { currentPage = p; renderUsers(); };
-    function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
+    window.viewUser = (id) => {
+        const u = allUsers.find(x => x.id === id);
+        if (u) {
+            Swal.fire({
+                title: u.username,
+                html: `<div style="text-align:left;"><p><strong>User ID:</strong> ${u.id}</p><p><strong>Phone:</strong> ${u.phone}</p><p><strong>Balance:</strong> ₦${(u.balance || 0).toLocaleString()}</p><p><strong>VIP:</strong> ${u.tierCode}</p><p><strong>Days Left:</strong> ${u.contractDaysRemaining || 0}</p><p><strong>Deposited:</strong> ₦${(u.totalDeposited || 0).toLocaleString()}</p></div>`,
+                background: '#111424', color: '#fff', confirmButtonColor: '#e5b842'
+            });
+        }
+    };
+    window.goToPage = (p) => { currentPage = p; renderUsers(); };
 
-    function verifyAccess() { const code = document.getElementById('adminPasswordInput').value.trim().toUpperCase(); if(code === ADMIN_CODE){ sessionStorage.setItem('nexusVerified', 'true'); document.getElementById('passwordModal').classList.add('hide'); setProgress(0, "🔓 Access granted. Loading executive data..."); loadFullDashboard(); } else { Swal.fire({ title:'ACCESS DENIED', text:'Invalid security code', icon:'error', background:'#111424', color:'#fff', confirmButtonColor:'#ef4444' }); document.getElementById('adminPasswordInput').value=''; } }
+    // User search and actions
+    document.getElementById('searchUserBtn').addEventListener('click', async () => {
+        const term = document.getElementById('userSearchInput').value.trim().toLowerCase();
+        if (!term) return;
+        let userDoc = null, userId = null;
+        const userRef = doc(db, "users", term);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) { userDoc = userSnap.data(); userId = term; }
+        else {
+            const phoneQuery = query(collection(db, "users"), where("phone", "==", term));
+            const phoneSnap = await getDocs(phoneQuery);
+            if (!phoneSnap.empty) { userDoc = phoneSnap.docs[0].data(); userId = phoneSnap.docs[0].id; }
+            else {
+                const nameQuery = query(collection(db, "users"), where("username", "==", term));
+                const nameSnap = await getDocs(nameQuery);
+                if (!nameSnap.empty) { userDoc = nameSnap.docs[0].data(); userId = nameSnap.docs[0].id; }
+            }
+        }
+        if (!userDoc) { Swal.fire({ title: "Not Found", icon: "error", background: "#111424" }); return; }
+        document.getElementById('resultUid').innerText = userId;
+        document.getElementById('resultUsername').innerText = userDoc.username || "N/A";
+        document.getElementById('resultPhone').innerText = userDoc.phone || "N/A";
+        document.getElementById('resultTier').innerText = userDoc.tierCode || "STANDARD";
+        document.getElementById('resultDays').innerText = userDoc.contractDaysRemaining || 0;
+        document.getElementById('resultBalance').innerText = "₦" + (userDoc.balance || 0).toLocaleString();
+        document.getElementById('userResultPanel').classList.add('show');
+        document.getElementById('userResultPanel').setAttribute('data-userid', userId);
+    });
+
+    document.getElementById('extendDaysBtn').addEventListener('click', async () => {
+        const uid = document.getElementById('userResultPanel').getAttribute('data-userid');
+        if (!uid) return;
+        const userRef = doc(db, "users", uid);
+        const snap = await getDoc(userRef);
+        const current = snap.data().contractDaysRemaining || 0;
+        await updateDoc(userRef, { contractDaysRemaining: current + 10 });
+        addNotification("Days Extended", `User ${uid} received +10 days`);
+        document.getElementById('resultDays').innerText = current + 10;
+        Swal.fire({ title: "Extended", text: "Added 10 days", icon: "success", timer: 1500, showConfirmButton: false, background: "#111424" });
+    });
+
+    document.getElementById('resetDaysBtn').addEventListener('click', async () => {
+        const uid = document.getElementById('userResultPanel').getAttribute('data-userid');
+        if (!uid) return;
+        await updateDoc(doc(db, "users", uid), { contractDaysRemaining: 40 });
+        addNotification("Days Reset", `User ${uid} contract reset to 40 days`);
+        document.getElementById('resultDays').innerText = 40;
+        Swal.fire({ title: "Reset", text: "Contract days reset to 40", icon: "success", timer: 1500, showConfirmButton: false, background: "#111424" });
+    });
+
+    document.getElementById('downgradeUserBtn').addEventListener('click', async () => {
+        const uid = document.getElementById('userResultPanel').getAttribute('data-userid');
+        if (!uid) return;
+        const confirm = await Swal.fire({ title: "Confirm", text: "Downgrade to STANDARD?", icon: "warning", showCancelButton: true, background: "#111424" });
+        if (confirm.isConfirmed) {
+            await updateDoc(doc(db, "users", uid), { tierCode: "NONE", contractDaysRemaining: 0 });
+            addNotification("User Downgraded", `User ${uid} is now STANDARD`);
+            document.getElementById('resultTier').innerText = "STANDARD";
+            document.getElementById('resultDays').innerText = 0;
+            Swal.fire({ title: "Downgraded", icon: "success", timer: 1500, background: "#111424" });
+        }
+    });
+
+    document.getElementById('addBalanceBtn').addEventListener('click', async () => {
+        const uid = document.getElementById('userResultPanel').getAttribute('data-userid');
+        if (!uid) return;
+        const userRef = doc(db, "users", uid);
+        const snap = await getDoc(userRef);
+        const current = snap.data().balance || 0;
+        await updateDoc(userRef, { balance: current + 10000 });
+        addNotification("Balance Added", `User ${uid} received ₦10,000`);
+        document.getElementById('resultBalance').innerText = "₦" + (current + 10000).toLocaleString();
+        Swal.fire({ title: "Added", text: "₦10,000 added", icon: "success", timer: 1500, showConfirmButton: false, background: "#111424" });
+    });
+
+    // Settings updates
+    document.getElementById('updateReferralRateBtn').addEventListener('click', async () => {
+        const val = parseInt(document.getElementById('referralRate').value);
+        await updateDoc(settingsRef, { referralCommissionRate: val });
+        addNotification("Settings Updated", `Commission rate set to ${val}%`);
+        Swal.fire({ title: "Updated", icon: "success", timer: 1500, background: "#111424" });
+    });
+    document.getElementById('updateCheckinBtn').addEventListener('click', async () => {
+        const val = parseInt(document.getElementById('checkinBonus').value);
+        await updateDoc(settingsRef, { checkinBonus: val });
+        addNotification("Settings Updated", `Check-in bonus set to ₦${val}`);
+        Swal.fire({ title: "Updated", icon: "success", timer: 1500, background: "#111424" });
+    });
+
+    // Broadcast
+    document.getElementById('sendBroadcastBtn').addEventListener('click', async () => {
+        const msg = document.getElementById('broadcastMessage').value.trim();
+        if (!msg) return;
+        const type = document.getElementById('broadcastType').value;
+        const confirm = await Swal.fire({ title: "Send Broadcast?", text: msg, icon: "question", showCancelButton: true, background: "#111424" });
+        if (confirm.isConfirmed) {
+            await addDoc(collection(db, "broadcasts"), { message: msg, type, timestamp: new Date(), active: true });
+            addNotification("Broadcast Sent", msg.substring(0, 50));
+            document.getElementById('broadcastMessage').value = '';
+            Swal.fire({ title: "Sent!", icon: "success", timer: 1500, background: "#111424" });
+        }
+    });
+
+    // Maintenance
+    document.getElementById('enableMaintenanceBtn').addEventListener('click', async () => {
+        await updateDoc(settingsRef, { maintenanceMode: true });
+        currentSettings.maintenanceMode = true;
+        document.getElementById('systemStatus').innerHTML = 'MAINTENANCE';
+        document.getElementById('systemStatus').style.color = '#f97316';
+        addNotification("Maintenance", "System maintenance mode ENABLED");
+        Swal.fire({ title: "Maintenance Mode", icon: "warning", background: "#111424" });
+    });
+    document.getElementById('disableMaintenanceBtn').addEventListener('click', async () => {
+        await updateDoc(settingsRef, { maintenanceMode: false });
+        currentSettings.maintenanceMode = false;
+        document.getElementById('systemStatus').innerHTML = 'ACTIVE';
+        document.getElementById('systemStatus').style.color = '#10b981';
+        addNotification("Maintenance", "System maintenance mode DISABLED");
+        Swal.fire({ title: "System Active", icon: "success", background: "#111424" });
+    });
+
+    // Announcement button - opens info.html
+    document.getElementById('announcementBtn').addEventListener('click', () => {
+        window.open('info.html', '_blank');
+    });
+
+    // UI Event Listeners
+    document.getElementById('searchInput')?.addEventListener('input', e => { currentSearch = e.target.value; currentPage = 1; renderUsers(); });
+    document.getElementById('yearSelect')?.addEventListener('change', async (e) => {
+        const year = parseInt(e.target.value);
+        const monthlyMap = {};
+        allUsers.forEach(u => {
+            if (u.createdAt && u.createdAt.getFullYear() === year) {
+                const key = `${year}-${u.createdAt.getMonth() + 1}`;
+                monthlyMap[key] = (monthlyMap[key] || 0) + 1;
+            }
+        });
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const counts = [];
+        for (let i = 0; i < 12; i++) counts.push(monthlyMap[`${year}-${i+1}`] || 0);
+        let cum = 0;
+        const cumArr = counts.map(v => { cum += v; return cum; });
+        userChart.data.datasets[0].data = counts;
+        userChart.data.datasets[1].data = cumArr;
+        userChart.update();
+    });
+    document.getElementById('notificationBell')?.addEventListener('click', () => { document.getElementById('notificationPanel').classList.toggle('active'); });
+    document.getElementById('clearAllNotifBtn')?.addEventListener('click', () => { notifications = []; unreadCount = 0; updateNotifBadge(); renderNotifList(); });
+    document.addEventListener('click', (e) => {
+        const panel = document.getElementById('notificationPanel');
+        const bell = document.getElementById('notificationBell');
+        if (panel && bell && !panel.contains(e.target) && !bell.contains(e.target)) panel.classList.remove('active');
+    });
+
+    // Password verification
+    function verifyAccess() {
+        const code = document.getElementById('adminPasswordInput').value.trim().toUpperCase();
+        if (code === ADMIN_CODE) {
+            sessionStorage.setItem('nexusVerified', 'true');
+            document.getElementById('passwordModal').classList.add('hide');
+            setProgress(0, "Access granted. Loading dashboard...");
+            loadSettings();
+            loadDashboard();
+        } else {
+            Swal.fire({ title: 'ACCESS DENIED', text: 'Invalid security code', icon: 'error', background: '#111424', color: '#fff', confirmButtonColor: '#ef4444' });
+            document.getElementById('adminPasswordInput').value = '';
+        }
+    }
 
     document.getElementById('verifyPasswordBtn')?.addEventListener('click', verifyAccess);
-    document.getElementById('adminPasswordInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') verifyAccess(); });
-    document.getElementById('searchInput')?.addEventListener('input', e=>{ currentSearch=e.target.value; currentPage=1; renderUsers(); });
-    document.getElementById('yearSelect')?.addEventListener('change', async(e)=>{ const year=parseInt(e.target.value); const monthlyMap={}; allUsers.forEach(u=>{ if(u.createdAt && u.createdAt.getFullYear()===year){ const key=`${year}-${u.createdAt.getMonth()+1}`; monthlyMap[key]=(monthlyMap[key]||0)+1; } }); buildChartData(monthlyMap, year); });
-    document.getElementById('adminUsersBtn')?.addEventListener('click', ()=>{ sessionStorage.setItem('nexusAdminSession','true'); window.location.href="admin.html"; });
-    document.getElementById('discussionsBtn')?.addEventListener('click',()=>{ const name=prompt("Enter display name:", localStorage.getItem('chatUserName')||"Team Member"); if(name){ localStorage.setItem('chatUserName',name); sessionStorage.setItem('nexusAdminSession','true'); window.location.href="discussion.html"; } });
-    document.getElementById('enableNotifBtn')?.addEventListener('click', requestNotifPermission);
-    document.getElementById('notificationBell')?.addEventListener('click',()=>{ document.getElementById('notificationPanel').classList.toggle('active'); });
-    document.getElementById('clearAllNotifBtn')?.addEventListener('click',()=>{ notifications=[]; unreadCount=0; updateNotifBadge(); renderNotifList(); });
-    document.addEventListener('click',(e)=>{ const panel=document.getElementById('notificationPanel'); const bell=document.getElementById('notificationBell'); if(panel && bell && !panel.contains(e.target) && !bell.contains(e.target)) panel.classList.remove('active'); });
-    if('Notification' in window && Notification.permission === 'granted') { permissionGranted=true; getAndSaveFCMToken(); }
-    if(sessionStorage.getItem('nexusVerified') === 'true'){ document.getElementById('passwordModal').classList.add('hide'); loadFullDashboard(); } else { document.getElementById('passwordModal').classList.remove('hide'); setProgress(0,"Waiting for executive authentication"); }
-</script>
-<script>
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(e=>console.log("SW error",e)); }
-    window.viewUserDetails = (id) => { const event = new CustomEvent('viewUser', { detail: id }); window.dispatchEvent(event); };
-    window.goToPageNum = (p) => { const event = new CustomEvent('goPage', { detail: p }); window.dispatchEvent(event); };
+    document.getElementById('adminPasswordInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') verifyAccess(); });
+
+    if (sessionStorage.getItem('nexusVerified') === 'true') {
+        document.getElementById('passwordModal').classList.add('hide');
+        loadSettings();
+        loadDashboard();
+    } else {
+        document.getElementById('passwordModal').classList.remove('hide');
+        setProgress(0, "Waiting for executive authentication");
+    }
+
+    // Real-time new user listener
+    let isInitial = true;
+    onSnapshot(collection(db, "users"), (snapshot) => {
+        if (isInitial) { isInitial = false; return; }
+        snapshot.docChanges().forEach(change => {
+            if (change.type === 'added') {
+                const data = change.doc.data();
+                let joinDate = null;
+                if (data.createdAt) {
+                    if (data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds * 1000);
+                    else if (data.createdAt.toDate) joinDate = data.createdAt.toDate();
+                }
+                const newUser = {
+                    id: change.doc.id, username: data.username || data.phone || "New User", phone: data.phone || "-",
+                    balance: data.balance || 0, tierCode: data.tierCode || "NONE",
+                    totalDeposited: data.totalDepositedAmount || 0, createdAt: joinDate,
+                    contractDaysRemaining: data.contractDaysRemaining || 0
+                };
+                if (!allUsers.some(u => u.id === newUser.id)) {
+                    allUsers.unshift(newUser);
+                    addNotification("🆕 New Registration", `${newUser.username} just joined NEXUS!`);
+                    renderUsers();
+                    document.getElementById('totalUsers').innerText = allUsers.length;
+                    document.getElementById('totalVIP').innerText = allUsers.filter(u => u.tierCode !== "NONE").length;
+                }
+            }
+        });
+    });
 </script>
 </body>
 </html>
