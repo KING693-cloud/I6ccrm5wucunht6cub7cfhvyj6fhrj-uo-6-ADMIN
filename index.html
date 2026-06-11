@@ -3,308 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>NEXUS EARN - Executive Dashboard</title>
+    <title>NEXUS EARN - Executive Dashboard | Secure Enterprise</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background: #0a0c15; color: #fff; min-height: 100vh; overflow-x: hidden; }
         
-        /* Loading Animation */
+        /* Enhanced Loading Overlay with Percentage */
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0a0c15, #111424);
+            background: linear-gradient(135deg, #0a0c15, #05070f);
             z-index: 10000; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            backdrop-filter: blur(2px);
         }
         .loading-overlay.hide { opacity: 0; visibility: hidden; pointer-events: none; }
         .loader-icon {
-            width: 90px; height: 90px; background: linear-gradient(135deg, #e5b842, #f5d061);
-            border-radius: 25px; display: flex; align-items: center; justify-content: center;
-            margin-bottom: 25px; animation: pulse 1.5s infinite;
-            box-shadow: 0 0 30px rgba(229,184,66,0.3);
+            width: 100px; height: 100px; background: linear-gradient(145deg, #e5b842, #f5d061);
+            border-radius: 30px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 30px; animation: pulseGlow 1.8s infinite;
+            box-shadow: 0 0 35px rgba(229,184,66,0.4);
         }
-        .loader-icon i { font-size: 45px; color: #111424; }
-        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-        .loader-text { font-size: 1.2rem; font-weight: 800; color: #e5b842; margin-bottom: 15px; letter-spacing: 3px; }
-        .loader-bar { width: 250px; height: 3px; background: #2d345a; border-radius: 3px; overflow: hidden; }
-        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e5b842, #f5d061); animation: fillBar 2.5s ease-out; }
-        @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
+        .loader-icon i { font-size: 52px; color: #0a0c15; }
+        @keyframes pulseGlow { 0%,100% { transform: scale(1); box-shadow: 0 0 20px rgba(229,184,66,0.4); } 50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(229,184,66,0.7); } }
+        .loader-text { font-size: 1.5rem; font-weight: 800; color: #e5b842; margin-bottom: 15px; letter-spacing: 4px; background: linear-gradient(135deg, #e5b842, #f5d061); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .loader-bar-container {
+            width: 320px; height: 6px; background: #1e244a; border-radius: 6px; overflow: hidden; margin: 10px 0;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e5b842, #f5d061, #e5b842); background-size: 200% auto; animation: shimmer 1.5s linear infinite; border-radius: 6px; transition: width 0.2s ease; }
+        @keyframes shimmer { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
+        .percentage-text { font-size: 1.3rem; font-weight: 800; color: #e5b842; margin-top: 12px; font-family: monospace; letter-spacing: 1px; }
+        .loading-status { font-size: 0.75rem; color: #9ca3af; margin-top: 12px; background: rgba(0,0,0,0.4); padding: 6px 14px; border-radius: 40px; }
         .loader-dots { display: flex; gap: 10px; margin-top: 20px; }
-        .loader-dots span { width: 8px; height: 8px; background: #e5b842; border-radius: 50%; animation: bounce 1.4s infinite; }
+        .loader-dots span { width: 8px; height: 8px; background: #e5b842; border-radius: 50%; animation: bounce 1.4s infinite; opacity: 0.6; }
         .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
         .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
-        .loading-steps {
-            margin-top: 25px;
-            display: flex;
-            gap: 20px;
-            color: #636b8f;
-            font-size: 0.7rem;
-        }
-        .loading-steps span.active { color: #e5b842; }
         
-        /* Password Modal */
+        /* Password Modal Premium */
         .password-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.98); z-index: 20000; display: flex;
-            align-items: center; justify-content: center; backdrop-filter: blur(10px);
+            align-items: center; justify-content: center; backdrop-filter: blur(12px);
         }
         .password-modal.hide { display: none; }
         .password-box {
-            background: #111424;
-            border-radius: 24px;
-            padding: 35px;
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-            border: 1px solid rgba(229,184,66,0.3);
-            animation: fadeInUp 0.4s ease;
+            background: #111424; border-radius: 32px; padding: 40px 35px; width: 90%; max-width: 420px;
+            text-align: center; border: 1px solid rgba(229,184,66,0.4); box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+            animation: fadeInUp 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .password-box i { font-size: 3rem; color: #e5b842; margin-bottom: 15px; }
-        .password-box h3 { font-size: 1.3rem; margin-bottom: 10px; }
-        .password-box p { font-size: 0.75rem; color: #9ca3af; margin-bottom: 20px; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .password-box i { font-size: 3.5rem; color: #e5b842; margin-bottom: 15px; }
+        .password-box h3 { font-size: 1.5rem; margin-bottom: 8px; }
+        .password-box p { font-size: 0.75rem; color: #9ca3af; margin-bottom: 25px; }
         .password-box input {
-            width: 100%;
-            background: #1b203a;
-            border: 1px solid #2d345a;
-            padding: 14px;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 1rem;
-            text-align: center;
-            letter-spacing: 4px;
-            font-weight: 700;
-            outline: none;
+            width: 100%; background: #1b203a; border: 1px solid #2d345a; padding: 14px; border-radius: 16px;
+            color: #fff; font-size: 1.2rem; text-align: center; letter-spacing: 6px; font-weight: 700; outline: none;
         }
-        .password-box input:focus { border-color: #e5b842; }
+        .password-box input:focus { border-color: #e5b842; box-shadow: 0 0 8px rgba(229,184,66,0.3); }
         .password-box button {
-            width: 100%;
-            background: linear-gradient(135deg, #f5d061, #e5b842);
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            color: #111424;
-            font-weight: 800;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 15px;
+            width: 100%; background: linear-gradient(135deg, #f5d061, #e5b842); border: none; padding: 14px;
+            border-radius: 16px; color: #111424; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 20px;
+            transition: transform 0.1s ease;
         }
+        .password-box button:active { transform: scale(0.97); }
         
         .admin-container { max-width: 1400px; margin: 0 auto; padding: 20px; display: none; }
-        
-        .header {
-            background: #111424;
-            border-radius: 16px;
-            padding: 15px 24px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            border: 1px solid rgba(229,184,66,0.1);
-        }
-        .logo h2 { color: #e5b842; font-size: 1.2rem; }
+        .header { background: #111424; border-radius: 20px; padding: 15px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border: 1px solid rgba(229,184,66,0.15); backdrop-filter: blur(4px); }
+        .logo h2 { color: #e5b842; font-size: 1.3rem; letter-spacing: -0.3px; }
         .logo p { font-size: 0.65rem; color: #9ca3af; }
-        
-        /* Notification Bell */
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            background: rgba(229,184,66,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        .notification-bell:hover { background: rgba(229,184,66,0.2); transform: scale(1.05); }
+        .notification-bell { position: relative; cursor: pointer; width: 42px; height: 42px; background: rgba(229,184,66,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .notification-bell:hover { background: rgba(229,184,66,0.25); transform: scale(1.05); }
         .notification-bell i { font-size: 1.2rem; color: #e5b842; }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ef4444;
-            color: white;
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 18px;
-            text-align: center;
-        }
-        
-        /* Notification Panel */
-        .notification-panel {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            width: 350px;
-            max-height: 500px;
-            background: #111424;
-            border-radius: 16px;
-            border: 1px solid rgba(229,184,66,0.2);
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        .notification-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 12px; min-width: 18px; text-align: center; box-shadow: 0 0 6px #ef4444; }
+        .notification-panel { position: fixed; top: 85px; right: 20px; width: 360px; max-height: 520px; background: #111424e6; backdrop-filter: blur(12px); border-radius: 20px; border: 1px solid rgba(229,184,66,0.3); z-index: 1000; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
         .notification-panel.active { display: flex; }
-        .notification-header {
-            padding: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .notification-header h4 { color: #e5b842; font-size: 0.9rem; }
-        .clear-all {
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-size: 0.7rem;
-            cursor: pointer;
-        }
-        .notification-list {
-            flex: 1;
-            overflow-y: auto;
-            max-height: 400px;
-        }
-        .notification-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .notification-item:hover { background: #1b203a; }
-        .notification-item.unread { background: rgba(229,184,66,0.05); border-left: 3px solid #e5b842; }
-        .notification-icon { width: 35px; height: 35px; background: rgba(229,184,66,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .notification-icon i { color: #e5b842; font-size: 0.9rem; }
-        .notification-content { flex: 1; }
-        .notification-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 3px; }
-        .notification-message { font-size: 0.7rem; color: #9ca3af; }
-        .notification-time { font-size: 0.6rem; color: #636b8f; margin-top: 3px; }
-        
-        .discussions-circle {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #e5b842, #f5d061);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .discussions-circle:hover { transform: scale(1.05); }
-        .discussions-circle i { font-size: 1.1rem; color: #111424; }
-        
-        .admin-btn {
-            background: linear-gradient(135deg, #e5b842, #f5d061);
-            border: none;
-            padding: 8px 20px;
-            border-radius: 30px;
-            color: #111424;
-            font-weight: 700;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .admin-btn:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(229,184,66,0.3); }
-        
-        .enable-notif-btn {
-            background: rgba(16,185,129,0.15);
-            border: 1px solid rgba(16,185,129,0.3);
-            padding: 5px 12px;
-            border-radius: 20px;
-            color: #10b981;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .enable-notif-btn:hover { background: rgba(16,185,129,0.25); }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #1b203a, #13172c);
-            border-radius: 14px;
-            padding: 14px;
-            text-align: center;
-            border: 1px solid rgba(229,184,66,0.1);
-            transition: all 0.3s;
-        }
-        .stat-card:hover { transform: translateY(-3px); border-color: rgba(229,184,66,0.3); }
-        .stat-card i { font-size: 1.5rem; color: #e5b842; margin-bottom: 6px; display: block; }
-        .stat-card .number { font-size: 1.5rem; font-weight: 800; }
-        .stat-card .label { font-size: 0.65rem; color: #9ca3af; margin-top: 3px; }
-        
-        .chart-card {
-            background: #111424;
-            border-radius: 16px;
-            border: 1px solid rgba(229,184,66,0.1);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .chart-header {
-            padding: 14px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .chart-header h3 { color: #e5b842; font-size: 0.85rem; }
-        .chart-container { padding: 20px; height: 300px; position: relative; }
-        
-        .section-card {
-            background: #111424;
-            border-radius: 16px;
-            border: 1px solid rgba(229,184,66,0.1);
-            overflow: hidden;
-        }
-        .card-header {
-            padding: 14px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .card-header h3 { color: #e5b842; font-size: 0.85rem; }
-        
+        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, #1b203a, #13172c); border-radius: 18px; padding: 16px 10px; text-align: center; border: 1px solid rgba(229,184,66,0.1); transition: transform 0.2s, border-color 0.2s; }
+        .stat-card:hover { transform: translateY(-4px); border-color: rgba(229,184,66,0.4); }
+        .stat-card i { font-size: 1.6rem; color: #e5b842; margin-bottom: 8px; display: block; }
+        .stat-card .number { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+        .stat-card .label { font-size: 0.7rem; color: #9ca3af; margin-top: 5px; }
+        .chart-card { background: #111424; border-radius: 20px; border: 1px solid rgba(229,184,66,0.1); overflow: hidden; margin-bottom: 20px; }
+        .chart-header { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .chart-header h3 { color: #e5b842; font-size: 0.9rem; }
+        .chart-container { padding: 20px; height: 310px; position: relative; }
+        .section-card { background: #111424; border-radius: 20px; border: 1px solid rgba(229,184,66,0.1); overflow: hidden; }
+        .card-header { padding: 14px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .table-container { overflow-x: auto; padding: 0 20px 20px; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        th { color: #e5b842; font-size: 0.7rem; text-transform: uppercase; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: #e5b842; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
         td { font-size: 0.75rem; }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.6rem;
-            font-weight: 600;
-        }
+        .badge { display: inline-block; padding: 3px 12px; border-radius: 30px; font-size: 0.6rem; font-weight: 600; }
         .badge-vip1 { background: rgba(229,184,66,0.15); color: #e5b842; }
         .badge-vip2 { background: rgba(192,132,252,0.15); color: #c084fc; }
         .badge-vip3 { background: rgba(59,130,246,0.15); color: #60a5fa; }
@@ -313,687 +110,212 @@
         .badge-vip6 { background: rgba(236,72,153,0.15); color: #ec4899; }
         .badge-vip7 { background: linear-gradient(135deg, rgba(229,184,66,0.2), rgba(229,184,66,0.05)); color: #e5b842; }
         .badge-standard { background: rgba(156,163,175,0.15); color: #9ca3af; }
-        
-        .btn-sm {
-            background: rgba(16,185,129,0.15);
-            border: none;
-            padding: 5px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: #10b981;
-        }
-        .btn-sm:hover { background: rgba(16,185,129,0.25); }
-        
-        .search-box input {
-            background: #1b203a;
-            border: 1px solid #2d345a;
-            padding: 7px 14px;
-            border-radius: 8px;
-            color: #fff;
-            width: 240px;
-            outline: none;
-            font-size: 0.75rem;
-        }
-        .search-box input:focus { border-color: #e5b842; }
-        
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 15px; padding-bottom: 10px; }
-        .pagination button {
-            background: #1b203a;
-            border: 1px solid #2d345a;
-            padding: 5px 12px;
-            border-radius: 6px;
-            color: #fff;
-            cursor: pointer;
-            font-size: 0.7rem;
-        }
-        .pagination button.active { background: #e5b842; color: #000; }
-        
-        .owner-badge {
-            background: rgba(229,184,66,0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            color: #e5b842;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .custom-toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1b203a;
-            border-left: 4px solid #10b981;
-            padding: 12px 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 10000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
+        .btn-sm { background: rgba(16,185,129,0.15); border: none; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.65rem; font-weight: 600; color: #10b981; transition: 0.2s; }
+        .btn-sm:hover { background: rgba(16,185,129,0.3); }
+        .search-box input { background: #1b203a; border: 1px solid #2d345a; padding: 8px 14px; border-radius: 40px; color: #fff; width: 250px; outline: none; font-size: 0.75rem; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { background: #1b203a; border: 1px solid #2d345a; padding: 6px 14px; border-radius: 10px; color: #fff; cursor: pointer; font-size: 0.7rem; transition: 0.2s; }
+        .pagination button.active { background: #e5b842; color: #000; border-color: #e5b842; }
+        .owner-badge { background: rgba(229,184,66,0.1); padding: 4px 14px; border-radius: 40px; font-size: 0.7rem; color: #e5b842; display: flex; align-items: center; gap: 6px; }
+        .admin-btn { background: linear-gradient(135deg, #e5b842, #f5d061); border: none; padding: 8px 20px; border-radius: 40px; color: #111424; font-weight: 700; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .enable-notif-btn { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.4); padding: 5px 14px; border-radius: 40px; color: #10b981; font-size: 0.7rem; cursor: pointer; }
+        .custom-toast { position: fixed; bottom: 25px; right: 25px; background: #1b203a; border-left: 5px solid #10b981; padding: 12px 20px; border-radius: 14px; display: flex; align-items: center; gap: 12px; z-index: 10000; transform: translateX(450px); transition: transform 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
         .custom-toast.show { transform: translateX(0); }
-        .custom-toast i { font-size: 1.2rem; color: #10b981; }
-        
-        @media (max-width: 900px) {
-            .stats-grid { grid-template-columns: repeat(3, 1fr); }
-            .notification-panel { width: 300px; right: 10px; }
-        }
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .admin-container { padding: 15px; }
-            .chart-container { height: 250px; }
-        }
+        @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } .notification-panel { width: 310px; } }
+        @media (max-width: 650px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
 
-<!-- Custom Toast -->
-<div class="custom-toast" id="customToast">
-    <i class="fa-solid fa-bell"></i>
-    <span id="toastMessage">New notification</span>
-</div>
-
-<!-- Loading Animation -->
+<div class="custom-toast" id="customToast"><i class="fa-solid fa-bell"></i><span id="toastMessage">Alert</span></div>
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loader-icon"><i class="fa-solid fa-chart-line"></i></div>
     <div class="loader-text">NEXUS EXECUTIVE</div>
-    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+    <div class="loader-bar-container"><div class="loader-bar-fill" id="progressFill"></div></div>
+    <div class="percentage-text" id="progressPercent">0%</div>
+    <div class="loading-status" id="loadingStatusMsg">🔐 Authenticating session...</div>
     <div class="loader-dots"><span></span><span></span><span></span></div>
-    <div class="loading-steps">
-        <span id="step1" class="active">🔐 Security</span>
-        <span id="step2">📊 Fetching Data</span>
-        <span id="step3">🔔 Loading Notifications</span>
-        <span id="step4">📈 Building Charts</span>
-        <span id="step5">✨ Ready</span>
-    </div>
 </div>
 
-<!-- Password Modal -->
 <div class="password-modal" id="passwordModal">
-    <div class="password-box">
-        <i class="fa-solid fa-lock"></i>
-        <h3>🔐 EXECUTIVE ACCESS</h3>
-        <p>Enter security code to access the dashboard</p>
-        <input type="password" id="adminPasswordInput" placeholder="ENTER CODE" maxlength="20" autocomplete="off">
-        <button id="verifyPasswordBtn"><i class="fa-solid fa-key"></i> VERIFY ACCESS</button>
-    </div>
+    <div class="password-box"><i class="fa-solid fa-shield-haltered"></i><h3>EXECUTIVE VAULT</h3><p>Enter 5-digit security code</p>
+    <input type="password" id="adminPasswordInput" placeholder="● ● ● ● ●" maxlength="10" autocomplete="off">
+    <button id="verifyPasswordBtn"><i class="fa-solid fa-key"></i> UNLOCK DASHBOARD</button></div>
 </div>
 
-<!-- Notification Panel -->
 <div class="notification-panel" id="notificationPanel">
-    <div class="notification-header">
-        <h4><i class="fa-regular fa-bell"></i> Notifications</h4>
-        <button class="clear-all" id="clearAllNotifBtn">Clear all</button>
-    </div>
-    <div class="notification-list" id="notificationList">
-        <div style="text-align:center; padding:20px; color:#636b8f;">No notifications yet</div>
-    </div>
+    <div class="notification-header"><h4><i class="fa-regular fa-bell"></i> Live Alerts</h4><button class="clear-all" id="clearAllNotifBtn">Clear all</button></div>
+    <div class="notification-list" id="notificationList"><div style="text-align:center; padding:20px; color:#636b8f;">No notifications</div></div>
 </div>
 
-<!-- Main Dashboard -->
 <div class="admin-container" id="mainContent">
     <div class="header">
-        <div class="logo">
-            <h2><i class="fa-solid fa-chart-simple"></i> NEXUS EXECUTIVE</h2>
-            <p>Enterprise Management Dashboard</p>
-        </div>
+        <div class="logo"><h2><i class="fa-solid fa-chart-simple"></i> NEXUS EXECUTIVE</h2><p>Enterprise Command Center</p></div>
         <div style="display: flex; gap: 12px; align-items: center;">
-            <div class="notification-bell" id="notificationBell">
-                <i class="fa-regular fa-bell"></i>
-                <span class="notification-badge" id="notifBadge" style="display: none;">0</span>
-            </div>
+            <div class="notification-bell" id="notificationBell"><i class="fa-regular fa-bell"></i><span class="notification-badge" id="notifBadge" style="display: none;">0</span></div>
             <button class="enable-notif-btn" id="enableNotifBtn"><i class="fa-solid fa-bell"></i> Enable Alerts</button>
-            <div class="discussions-circle" id="discussionsBtn" title="Team Chat">
-                <i class="fa-solid fa-comments"></i>
-            </div>
-            <div class="owner-badge">
-                <i class="fa-solid fa-crown"></i> DANIEL
-            </div>
+            <div class="discussions-circle" id="discussionsBtn" style="width:40px;height:40px;background:linear-gradient(135deg,#e5b842,#f5d061);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="fa-solid fa-comments" style="color:#111424;"></i></div>
+            <div class="owner-badge"><i class="fa-solid fa-crown"></i> DANIEL</div>
             <button class="admin-btn" id="adminUsersBtn"><i class="fa-solid fa-user-gear"></i> ADMIN USERS</button>
         </div>
     </div>
-
     <div class="stats-grid">
         <div class="stat-card"><i class="fa-solid fa-users"></i><div class="number" id="totalUsers">0</div><div class="label">Total Users</div></div>
         <div class="stat-card"><i class="fa-solid fa-user-plus"></i><div class="number" id="newUsersThisMonth">0</div><div class="label">New This Month</div></div>
-        <div class="stat-card"><i class="fa-solid fa-crown"></i><div class="number" id="totalVIP">0</div><div class="label">VIP Users</div></div>
+        <div class="stat-card"><i class="fa-solid fa-crown"></i><div class="number" id="totalVIP">0</div><div class="label">VIP Members</div></div>
         <div class="stat-card"><i class="fa-solid fa-wallet"></i><div class="number" id="totalBalance">₦0</div><div class="label">Total Balance</div></div>
         <div class="stat-card"><i class="fa-solid fa-money-bill-wave"></i><div class="number" id="totalDeposited">₦0</div><div class="label">Total Deposited</div></div>
     </div>
-
-    <div class="chart-card">
-        <div class="chart-header">
-            <h3><i class="fa-solid fa-chart-column"></i> User Growth Analytics</h3>
-            <div class="month-selector">
-                <select id="yearSelect" style="background:transparent; border:none; color:#fff;">
-                    <option value="2024">2024</option>
-                    <option value="2025" selected>2025</option>
-                    <option value="2026">2026</option>
-                </select>
-            </div>
-        </div>
-        <div class="chart-container">
-            <canvas id="userGrowthChart"></canvas>
-        </div>
-    </div>
-
-    <div class="section-card">
-        <div class="card-header">
-            <h3><i class="fa-solid fa-database"></i> User Directory</h3>
-            <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search by name or phone..."></div>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>User ID</th>
-                        <th>Username</th>
-                        <th>Phone</th>
-                        <th>VIP Level</th>
-                        <th>Balance</th>
-                        <th>Deposited</th>
-                        <th>Joined</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    <tr><td colspan="8" style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-pulse"></i> Loading secure data...</div></tbody>
-            </table>
-            <div class="pagination" id="pagination"></div>
-        </div>
-    </div>
+    <div class="chart-card"><div class="chart-header"><h3><i class="fa-solid fa-chart-line"></i> User Growth Analytics</h3><select id="yearSelect" style="background:#1b203a; border-radius:20px; padding:5px 10px; color:#fff; border:1px solid #2d345a;"><option value="2024">2024</option><option value="2025" selected>2025</option><option value="2026">2026</option></select></div><div class="chart-container"><canvas id="userGrowthChart"></canvas></div></div>
+    <div class="section-card"><div class="card-header"><h3><i class="fa-solid fa-database"></i> User Directory</h3><div class="search-box"><input type="text" id="searchInput" placeholder="🔍 Search by name or phone..."></div></div><div class="table-container"><table><thead><tr><th>User ID</th><th>Username</th><th>Phone</th><th>VIP Level</th><th>Balance</th><th>Deposited</th><th>Joined</th><th>Action</th></tr></thead><tbody id="usersTableBody"><tr><td colspan="8" style="text-align:center; padding:40px;"><i class="fa-solid fa-spinner fa-pulse"></i> Loading secure data...</td></tr></tbody></table><div class="pagination" id="pagination"></div></div></div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { getFirestore, collection, getDocs, query, where, onSnapshot, doc, setDoc, addDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDUIQ5s-MI2V3rsi_uWBbRb5YGcFmjjKK4",
-        authDomain: "nexus-earn-1.firebaseapp.com",
-        projectId: "nexus-earn-1",
-        storageBucket: "nexus-earn-1.firebasestorage.app",
-        messagingSenderId: "779765076952",
-        appId: "1:779765076952:web:fa5fac51bef82e74b598ad"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyDUIQ5s-MI2V3rsi_uWBbRb5YGcFmjjKK4", authDomain: "nexus-earn-1.firebaseapp.com", projectId: "nexus-earn-1", storageBucket: "nexus-earn-1.firebasestorage.app", messagingSenderId: "779765076952", appId: "1:779765076952:web:fa5fac51bef82e74b598ad" };
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
     const messaging = getMessaging(app);
-
     const VAPID_KEY = "BNVspgdAM2DSbGJ7OMbZiy57LKt4uvsOb4twi_1bDvsSs16x-A3NHT3JM06vJCSTbm5wcFsv6428PyvsnV9sgTM";
 
-    let allUsers = [];
-    let currentPage = 1;
-    let currentSearch = "";
-    let userChart = null;
-    let notifications = [];
-    let unreadCount = 0;
-    let permissionGranted = false;
-    let lastUserCount = 0;
-    let fcmTokenSaved = false;
-    const perPage = 15;
+    let allUsers = [], currentPage = 1, currentSearch = "", userChart = null, notifications = [], unreadCount = 0;
+    let permissionGranted = false, fcmTokenSaved = false, isInitialSnapshot = true;
     const ADMIN_CODE = "SEVENS";
+    const perPage = 15;
 
-    function showCustomToast(message) {
-        const toast = document.getElementById('customToast');
-        document.getElementById('toastMessage').innerText = message;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
+    // Loading progress helpers
+    let currentProgress = 0;
+    function setProgress(percent, statusText) {
+        currentProgress = Math.min(99, Math.max(0, percent));
+        const fillEl = document.getElementById('progressFill');
+        const percentEl = document.getElementById('progressPercent');
+        const statusEl = document.getElementById('loadingStatusMsg');
+        if (fillEl) fillEl.style.width = currentProgress + '%';
+        if (percentEl) percentEl.innerText = Math.floor(currentProgress) + '%';
+        if (statusEl && statusText) statusEl.innerText = statusText;
     }
 
-    function showDesktopNotification(title, body) {
-        if (!permissionGranted) return;
-        if ('Notification' in window && Notification.permission === 'granted') {
-            const notification = new Notification(title, {
-                body: body,
-                icon: '/logo.png',
-                badge: '/logo.png',
-                vibrate: [200, 100, 200],
-                silent: false,
-                tag: 'new-user'
+    function hideLoadingAndShow() { 
+        document.getElementById('mainContent').style.display = 'block';
+        const loader = document.getElementById('loadingOverlay');
+        loader.classList.add('hide');
+        setTimeout(() => loader.style.display = 'none', 600);
+    }
+
+    function showCustomToast(msg) { const t = document.getElementById('customToast'); document.getElementById('toastMessage').innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3200); }
+    function playNotifSound() { new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3').play().catch(e=>{}); }
+    
+    async function addNotification(title, message) {
+        const notif = { id: Date.now(), title, message, timestamp: new Date(), read: false };
+        notifications.unshift(notif); if (notifications.length > 60) notifications.pop();
+        unreadCount++; updateNotifBadge(); renderNotifList();
+        try { await addDoc(collection(db, "adminNotifications"), { title, message, timestamp: new Date() }); } catch(e) {}
+        if (permissionGranted && Notification.permission === 'granted') new Notification(title, { body: message, icon: '/logo.png' });
+        showCustomToast(message); playNotifSound();
+    }
+    function updateNotifBadge() { const b = document.getElementById('notifBadge'); if (unreadCount > 0) { b.style.display = 'flex'; b.innerText = unreadCount > 9 ? '9+' : unreadCount; } else b.style.display = 'none'; }
+    function renderNotifList() { const container = document.getElementById('notificationList'); if(!notifications.length){ container.innerHTML='<div style="text-align:center; padding:20px;">✨ No alerts</div>'; return; }
+        container.innerHTML = ''; notifications.forEach(n=>{ const div = document.createElement('div'); div.className = `notification-item ${!n.read ? 'unread' : ''}`; div.onclick = ()=>{ if(!n.read){ n.read=true; unreadCount--; updateNotifBadge(); renderNotifList(); } };
+        div.innerHTML = `<div class="notification-icon"><i class="fa-solid fa-user-plus"></i></div><div class="notification-content"><div class="notification-title">${escapeHtml(n.title)}</div><div class="notification-message">${escapeHtml(n.message)}</div><div class="notification-time">${new Date(n.timestamp).toLocaleTimeString()}</div></div>`; container.appendChild(div); });
+    }
+    async function requestNotifPermission() { if ('Notification' in window) { const perm = await Notification.requestPermission(); permissionGranted = (perm === 'granted'); if(permissionGranted) { showCustomToast('✅ Notifications active'); await getAndSaveFCMToken(); } else showCustomToast('⚠️ Notifications blocked'); } }
+    async function getAndSaveFCMToken() { if(fcmTokenSaved) return; try { const token = await getToken(messaging, { vapidKey: VAPID_KEY }); if(token) { await setDoc(doc(db, "adminTokens", "admin"), { token, updatedAt: new Date() }); fcmTokenSaved=true; } } catch(e){} }
+    onMessage(messaging, (p) => { if(p.notification) addNotification(p.notification.title || 'Alert', p.notification.body || 'New event'); });
+
+    // Efficient data loading with progress
+    async function loadFullDashboard() {
+        try {
+            setProgress(5, "🔄 Fetching user base...");
+            const usersSnap = await getDocs(collection(db, "users"));
+            allUsers = []; const userMap = new Map();
+            usersSnap.forEach(doc => { const data = doc.data(); let joinDate = null;
+                if(data.createdAt){ if(data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds*1000); else if(data.createdAt.toDate) joinDate = data.createdAt.toDate(); }
+                const userObj = { id: doc.id, username: data.username || data.phone || "User", phone: data.phone || "-", balance: data.balance || 0, tierCode: data.tierCode || "NONE", totalDeposited: 0, createdAt: joinDate };
+                allUsers.push(userObj); userMap.set(doc.id, userObj);
             });
-            notification.onclick = () => { window.focus(); notification.close(); };
-            const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
-            audio.play().catch(e => console.log('Audio play failed:', e));
-        }
+            setProgress(35, "📊 Aggregating financial records...");
+            const ledgerSnap = await getDocs(collection(db, "ledger"));
+            const depositSum = new Map();
+            ledgerSnap.forEach(doc => { const ld = doc.data(); const uid = ld.uid; const title = (ld.title || "").toLowerCase(); if(title.includes("paystack") || title.includes("deposit") || ld.type === "deposit") { const amt = ld.amount || 0; depositSum.set(uid, (depositSum.get(uid) || 0) + amt); } });
+            allUsers.forEach(u => { u.totalDeposited = depositSum.get(u.id) || 0; });
+            setProgress(65, "🔔 Loading notification history...");
+            const notifSnap = await getDocs(query(collection(db, "adminNotifications"), orderBy("timestamp", "desc"), limit(35)));
+            notifications = []; notifSnap.forEach(doc => notifications.push({ id: doc.id, ...doc.data(), read: true }));
+            unreadCount = 0; updateNotifBadge(); renderNotifList();
+            setProgress(85, "📈 Building analytics & charts...");
+            const now = new Date(); const currentYear = now.getFullYear(); const currentMonth = now.getMonth();
+            let newUsersThisMonth = 0; const monthlyMap = {};
+            allUsers.forEach(u => { if(u.createdAt){ const y = u.createdAt.getFullYear(); const m = u.createdAt.getMonth(); const key = `${y}-${m+1}`; monthlyMap[key] = (monthlyMap[key] || 0) + 1; if(y === currentYear && m === currentMonth) newUsersThisMonth++; } });
+            const totalVIP = allUsers.filter(u => u.tierCode !== "NONE").length;
+            const totalBalance = allUsers.reduce((s,u) => s + (u.balance || 0), 0);
+            const totalDepositedSum = allUsers.reduce((s,u) => s + (u.totalDeposited || 0), 0);
+            animateNumber('totalUsers', allUsers.length); animateNumber('newUsersThisMonth', newUsersThisMonth); animateNumber('totalVIP', totalVIP);
+            animateNumberCurrency('totalBalance', totalBalance); animateNumberCurrency('totalDeposited', totalDepositedSum);
+            buildChartData(monthlyMap, currentYear);
+            renderUsers();
+            setProgress(100, "✅ Dashboard ready. Welcome, Director.");
+            setTimeout(() => { hideLoadingAndShow(); }, 300);
+            startRealtimeNewUserListener();
+        } catch(err) { console.error(err); document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="8" style="color:#ef4444; text-align:center;">⚠️ Failed to load data: ${err.message}</td></tr>`; setProgress(100, "⚠️ Loaded with errors, retry refresh"); setTimeout(()=>hideLoadingAndShow(),1200); }
     }
 
-    function playNotificationSound() {
-        const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
-        audio.play().catch(e => console.log('Audio play failed:', e));
-    }
-
-    async function addNotification(title, message, type = 'user') {
-        const notification = {
-            id: Date.now(),
-            title: title,
-            message: message,
-            type: type,
-            timestamp: new Date(),
-            read: false
-        };
-        notifications.unshift(notification);
-        if (notifications.length > 50) notifications.pop();
-        unreadCount++;
-        updateNotificationBadge();
-        renderNotificationList();
-        try {
-            await addDoc(collection(db, "adminNotifications"), { ...notification, timestamp: new Date() });
-        } catch(e) { console.error('Save notification error:', e); }
-        showDesktopNotification(title, message);
-        showCustomToast(message);
-        playNotificationSound();
-    }
-
-    function updateNotificationBadge() {
-        const badge = document.getElementById('notifBadge');
-        if (unreadCount > 0) {
-            badge.style.display = 'flex';
-            badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-        } else {
-            badge.style.display = 'none';
-        }
-    }
-
-    function renderNotificationList() {
-        const container = document.getElementById('notificationList');
-        if (notifications.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#636b8f;">No notifications yet</div>';
-            return;
-        }
-        container.innerHTML = '';
-        notifications.forEach(notif => {
-            const div = document.createElement('div');
-            div.className = `notification-item ${!notif.read ? 'unread' : ''}`;
-            div.onclick = () => markNotificationRead(notif.id);
-            div.innerHTML = `
-                <div class="notification-icon"><i class="fa-solid fa-user-plus"></i></div>
-                <div class="notification-content">
-                    <div class="notification-title">${notif.title}</div>
-                    <div class="notification-message">${notif.message}</div>
-                    <div class="notification-time">${new Date(notif.timestamp).toLocaleTimeString()}</div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function markNotificationRead(id) {
-        const notif = notifications.find(n => n.id === id);
-        if (notif && !notif.read) {
-            notif.read = true;
-            unreadCount--;
-            updateNotificationBadge();
-            renderNotificationList();
-        }
-    }
-
-    async function requestNotificationPermission() {
-        if ('Notification' in window) {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                permissionGranted = true;
-                showCustomToast('✅ Notifications enabled! You will receive alerts for new users.');
-                await getAndSaveFCMToken();
-            } else {
-                showCustomToast('⚠️ Notifications disabled. You can enable them in browser settings.');
-            }
-        } else {
-            showCustomToast('❌ Your browser does not support desktop notifications.');
-        }
-    }
-
-    async function getAndSaveFCMToken() {
-        if (fcmTokenSaved) return;
-        try {
-            const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-            if (token) {
-                await setDoc(doc(db, "adminTokens", "admin"), { token: token, updatedAt: new Date(), browser: navigator.userAgent });
-                fcmTokenSaved = true;
-                console.log('FCM Token saved successfully');
-            }
-        } catch(e) { console.error('FCM token error:', e); }
-    }
-
-    onMessage(messaging, (payload) => {
-        console.log('Foreground message received:', payload);
-        if (payload.notification) {
-            addNotification(payload.notification.title || 'New Alert', payload.notification.body || 'Check your dashboard', 'fcm');
-        }
-    });
-
-    function listenForNewUsers() {
+    function startRealtimeNewUserListener() {
         const usersRef = collection(db, "users");
         const q = query(usersRef, orderBy("createdAt", "desc"));
         onSnapshot(q, (snapshot) => {
-            const currentUserCount = snapshot.size;
-            if (lastUserCount > 0 && currentUserCount > lastUserCount) {
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const isNew = !allUsers.find(u => u.id === doc.id);
-                    if (isNew) {
-                        const username = data.username || data.phone || 'New User';
-                        addNotification('📱 New User Registration', `${username} just joined NEXUS EARN! ${data.phone ? `📞 ${data.phone}` : ''}`, 'user');
+            if (isInitialSnapshot) { isInitialSnapshot = false; return; }
+            snapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const data = change.doc.data();
+                    let joinDate = null; if(data.createdAt){ if(data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds*1000); else if(data.createdAt.toDate) joinDate = data.createdAt.toDate(); }
+                    const newUser = { id: change.doc.id, username: data.username || data.phone || "New User", phone: data.phone || "-", balance: data.balance || 0, tierCode: data.tierCode || "NONE", totalDeposited: 0, createdAt: joinDate };
+                    if(!allUsers.some(u=>u.id === newUser.id)) {
+                        allUsers.unshift(newUser);
+                        addNotification("🆕 New Registration", `${newUser.username} just joined NEXUS! ${newUser.phone !== "-" ? "📞 "+newUser.phone : ""}`);
+                        renderUsers(); 
+                        const totalUsers = allUsers.length, totalVIP = allUsers.filter(u=>u.tierCode!=="NONE").length;
+                        animateNumber('totalUsers', totalUsers); animateNumber('totalVIP', totalVIP);
                     }
-                });
-            }
-            lastUserCount = currentUserCount;
-        });
-    }
-
-    async function loadDashboardData() {
-        try {
-            updateLoadingStep(3);
-            const userSnap = await getDocs(collection(db, "users"));
-            allUsers = [];
-            userSnap.forEach(doc => {
-                const data = doc.data();
-                let joinDate = null;
-                if (data.createdAt) {
-                    if (data.createdAt.seconds) joinDate = new Date(data.createdAt.seconds * 1000);
-                    else if (data.createdAt.toDate) joinDate = data.createdAt.toDate();
-                }
-                allUsers.push({
-                    id: doc.id,
-                    username: data.username || data.phone || "Unknown",
-                    phone: data.phone || "-",
-                    balance: data.balance || 0,
-                    tierCode: data.tierCode || "NONE",
-                    totalDeposited: 0,
-                    createdAt: joinDate
-                });
-            });
-            updateLoadingStep(4);
-            
-            const notifSnap = await getDocs(query(collection(db, "adminNotifications"), orderBy("timestamp", "desc"), limit(30)));
-            notifications = [];
-            notifSnap.forEach(doc => { notifications.push({ id: doc.id, ...doc.data(), read: true }); });
-            unreadCount = 0;
-            updateNotificationBadge();
-            renderNotificationList();
-            
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const monthlyData = {};
-            let newUsersThisMonth = 0;
-            allUsers.forEach(user => {
-                if (user.createdAt) {
-                    const year = user.createdAt.getFullYear();
-                    const month = user.createdAt.getMonth();
-                    const key = `${year}-${month + 1}`;
-                    monthlyData[key] = (monthlyData[key] || 0) + 1;
-                    if (year === currentYear && month === currentMonth) newUsersThisMonth++;
                 }
             });
-            
-            const depositPromises = allUsers.map(async (user) => {
-                const ledgerQuery = query(collection(db, "ledger"), where("uid", "==", user.id));
-                const ledgerSnap = await getDocs(ledgerQuery);
-                let deposited = 0;
-                ledgerSnap.forEach(doc => {
-                    const data = doc.data();
-                    const title = (data.title || "").toLowerCase();
-                    if (title.includes("paystack") || title.includes("deposit")) deposited += data.amount || 0;
-                });
-                user.totalDeposited = deposited;
-            });
-            await Promise.all(depositPromises);
-            updateLoadingStep(5);
-            
-            const totalUsers = allUsers.length;
-            const totalVIP = allUsers.filter(u => u.tierCode !== "NONE").length;
-            const totalBalance = allUsers.reduce((sum, u) => sum + (u.balance || 0), 0);
-            const totalDeposited = allUsers.reduce((sum, u) => sum + (u.totalDeposited || 0), 0);
-            
-            animateNumber('totalUsers', totalUsers);
-            animateNumber('newUsersThisMonth', newUsersThisMonth);
-            animateNumber('totalVIP', totalVIP);
-            animateNumberCurrency('totalBalance', totalBalance);
-            animateNumberCurrency('totalDeposited', totalDeposited);
-            
-            buildChartData(monthlyData, currentYear);
-            renderUsers();
-            listenForNewUsers();
-        } catch(e) { 
-            console.error(e);
-            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px; color:#ef4444;"><i class="fa-solid fa-circle-exclamation"></i> Error loading data</div>';
-        }
+        }, err=>console.warn("Snapshot error", err));
     }
 
-    function buildChartData(monthlyData, year) {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const userCounts = [];
-        for (let i = 0; i < 12; i++) {
-            const key = `${year}-${i + 1}`;
-            userCounts.push(monthlyData[key] || 0);
-        }
-        let cumulative = 0;
-        const cumulativeCounts = userCounts.map(count => { cumulative += count; return cumulative; });
-        
-        const ctx = document.getElementById('userGrowthChart').getContext('2d');
-        if (userChart) userChart.destroy();
-        userChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [
-                    { label: 'New Users (Monthly)', data: userCounts, borderColor: '#e5b842', backgroundColor: 'rgba(229,184,66,0.1)', borderWidth: 2, fill: true, tension: 0.3 },
-                    { label: 'Total Users', data: cumulativeCounts, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.05)', borderWidth: 2, fill: false, tension: 0.3, borderDash: [5, 5] }
-                ]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#fff' } } } }
-        });
-    }
+    function buildChartData(monthlyMap, year) { const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; const counts=[]; for(let i=0;i<12;i++){ counts.push(monthlyMap[`${year}-${i+1}`] || 0); } let cum=0; const cumArr=counts.map(v=>{ cum+=v; return cum; });
+        const ctx = document.getElementById('userGrowthChart').getContext('2d'); if(userChart) userChart.destroy();
+        userChart = new Chart(ctx, { type:'line', data:{ labels:months, datasets:[{ label:'New Users (Monthly)', data:counts, borderColor:'#e5b842', backgroundColor:'rgba(229,184,66,0.1)', borderWidth:2.5, fill:true, tension:0.3 },{ label:'Total Cumulative', data:cumArr, borderColor:'#10b981', backgroundColor:'transparent', borderWidth:2, borderDash:[6,6], fill:false }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#fff' } } } } }); }
 
-    function animateNumber(id, target) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        let current = 0;
-        const increment = Math.ceil(target / 50);
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) { el.innerText = target.toLocaleString(); clearInterval(timer); }
-            else el.innerText = current.toLocaleString();
-        }, 20);
-    }
+    function animateNumber(id, target) { const el = document.getElementById(id); if(!el) return; let curr=0; const step=Math.ceil(target/45); const timer=setInterval(()=>{ curr+=step; if(curr>=target){ el.innerText=target.toLocaleString(); clearInterval(timer); } else el.innerText=curr.toLocaleString(); }, 18); }
+    function animateNumberCurrency(id, target) { const el = document.getElementById(id); if(!el) return; let curr=0; const step=Math.ceil(target/45); const timer=setInterval(()=>{ curr+=step; if(curr>=target){ el.innerHTML='₦'+target.toLocaleString(); clearInterval(timer); } else el.innerHTML='₦'+curr.toLocaleString(); }, 18); }
+    function getVipBadge(tier) { if(tier==="NONE") return "badge-standard"; const map={ VIP1:"badge-vip1", VIP2:"badge-vip2", VIP3:"badge-vip3", VIP4:"badge-vip4", VIP5:"badge-vip5", VIP6:"badge-vip6" }; return map[tier] || "badge-vip7"; }
+    function renderUsers() { let filtered = allUsers.filter(u=> !currentSearch || u.username.toLowerCase().includes(currentSearch.toLowerCase()) || u.phone.includes(currentSearch)); const start=(currentPage-1)*perPage; const paginated=filtered.slice(start, start+perPage); const tbody=document.getElementById('usersTableBody'); if(!paginated.length){ tbody.innerHTML='<tr><td colspan="8" style="text-align:center;">No records</td></tr>'; } else { tbody.innerHTML=''; paginated.forEach(u=>{ const tierDisplay= u.tierCode==="NONE"?"Standard":u.tierCode; const joinDate= u.createdAt ? u.createdAt.toLocaleDateString() : '-'; tbody.innerHTML+=`<tr><td><small>${u.id.slice(0,8)}...</small></td><td><strong>${escapeHtml(u.username)}</strong></td><td>${u.phone}</td><td><span class="badge ${getVipBadge(u.tierCode)}">${tierDisplay}</span></td><td style="color:#10b981;">₦${(u.balance||0).toLocaleString()}</td><td style="color:#e5b842;">₦${(u.totalDeposited||0).toLocaleString()}</td><td><small>${joinDate}</small></td><td><button class="btn-sm" onclick="window.viewUserDetails('${u.id}')"><i class="fa-solid fa-eye"></i> View</button></td></tr>`; }); } const totalPages=Math.ceil(filtered.length/perPage); let pages=''; for(let i=1;i<=Math.min(totalPages,12);i++) pages+=`<button class="${i===currentPage?'active':''}" onclick="window.goToPageNum(${i})">${i}</button>`; document.getElementById('pagination').innerHTML=pages; }
+    window.viewUserDetails = (id) => { const u = allUsers.find(x=>x.id===id); if(u) Swal.fire({ title: u.username, html: `<div style="text-align:left;"><p><strong>User ID:</strong> ${u.id}</p><p><strong>Username:</strong> ${u.username}</p><p><strong>Phone:</strong> ${u.phone}</p><p><strong>Balance:</strong> ₦${(u.balance||0).toLocaleString()}</p><p><strong>VIP:</strong> ${u.tierCode}</p><p><strong>Total Deposited:</strong> ₦${(u.totalDeposited||0).toLocaleString()}</p><p><strong>Joined:</strong> ${u.createdAt ? u.createdAt.toLocaleString() : '-'}</p></div>`, background:'#111424', color:'#fff', confirmButtonColor:'#e5b842' }); };
+    window.goToPageNum = (p) => { currentPage = p; renderUsers(); };
+    function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-    function animateNumberCurrency(id, target) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        let current = 0;
-        const increment = Math.ceil(target / 50);
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= target) { el.innerHTML = '₦' + target.toLocaleString(); clearInterval(timer); }
-            else el.innerHTML = '₦' + current.toLocaleString();
-        }, 20);
-    }
+    function verifyAccess() { const code = document.getElementById('adminPasswordInput').value.trim().toUpperCase(); if(code === ADMIN_CODE){ sessionStorage.setItem('nexusVerified', 'true'); document.getElementById('passwordModal').classList.add('hide'); setProgress(0, "🔓 Access granted. Loading executive data..."); loadFullDashboard(); } else { Swal.fire({ title:'ACCESS DENIED', text:'Invalid security code', icon:'error', background:'#111424', color:'#fff', confirmButtonColor:'#ef4444' }); document.getElementById('adminPasswordInput').value=''; } }
 
-    function getVipBadgeClass(tier) {
-        if (tier === "NONE") return "badge-standard";
-        if (tier === "VIP1") return "badge-vip1";
-        if (tier === "VIP2") return "badge-vip2";
-        if (tier === "VIP3") return "badge-vip3";
-        if (tier === "VIP4") return "badge-vip4";
-        if (tier === "VIP5") return "badge-vip5";
-        if (tier === "VIP6") return "badge-vip6";
-        return "badge-vip7";
-    }
-
-    function renderUsers() {
-        let filtered = [...allUsers];
-        if (currentSearch) {
-            const search = currentSearch.toLowerCase();
-            filtered = filtered.filter(u => u.username.toLowerCase().includes(search) || u.phone.includes(search));
-        }
-        const start = (currentPage - 1) * perPage;
-        const paginated = filtered.slice(start, start + perPage);
-        const tbody = document.getElementById('usersTableBody');
-        
-        if (paginated.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">No users found</div>';
-        } else {
-            tbody.innerHTML = '';
-            paginated.forEach(u => {
-                const tierDisplay = u.tierCode === "NONE" ? "Standard" : u.tierCode;
-                const badgeClass = getVipBadgeClass(u.tierCode);
-                const joinDate = u.createdAt ? u.createdAt.toLocaleDateString() : '-';
-                tbody.innerHTML += `<tr>
-                    <td><small style="color:#636b8f;">${u.id.slice(0,10)}...</small></div>
-                    <td><strong>${escapeHtml(u.username)}</strong></div>
-                    <td>${u.phone}</div>
-                    <td><span class="badge ${badgeClass}">${tierDisplay}</span></div>
-                    <td style="color:#10b981;">₦${(u.balance||0).toLocaleString()}</div>
-                    <td style="color:#e5b842;">₦${(u.totalDeposited||0).toLocaleString()}</div>
-                    <td><small>${joinDate}</small></div>
-                    <td><button class="btn-sm" onclick="viewUser('${u.id}')"><i class="fa-solid fa-eye"></i> View</button></div>
-                </tr>`;
-            });
-        }
-        
-        const totalPages = Math.ceil(filtered.length / perPage);
-        let pages = '';
-        for (let i = 1; i <= Math.min(totalPages, 10); i++) {
-            pages += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-        }
-        document.getElementById('pagination').innerHTML = pages;
-    }
-
-    window.viewUser = (id) => {
-        const user = allUsers.find(u => u.id === id);
-        Swal.fire({
-            title: user.username,
-            html: `<div style="text-align:left;"><p><strong>User ID:</strong> ${user.id}</p><p><strong>Username:</strong> ${user.username}</p><p><strong>Phone:</strong> ${user.phone}</p><p><strong>Balance:</strong> ₦${(user.balance||0).toLocaleString()}</p><p><strong>VIP:</strong> ${user.tierCode === 'NONE' ? 'Standard' : user.tierCode}</p><p><strong>Joined:</strong> ${user.createdAt ? user.createdAt.toLocaleString() : '-'}</p></div>`,
-            background: '#111424', color: '#fff', confirmButtonColor: '#e5b842'
-        });
-    };
-
-    window.goToPage = (page) => { currentPage = page; renderUsers(); };
-    
-    function updateLoadingStep(step) {
-        const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
-        steps.forEach((s, i) => { const el = document.getElementById(s); if (el) i < step ? el.classList.add('active') : el.classList.remove('active'); });
-    }
-
-    function hideLoading() {
-        const loader = document.getElementById('loadingOverlay');
-        loader.classList.add('hide');
-        setTimeout(() => loader.style.display = 'none', 500);
-    }
-
-    function showContent() {
-        document.getElementById('mainContent').style.display = 'block';
-        hideLoading();
-    }
-
-    function checkSession() {
-        const fromAdmin = sessionStorage.getItem('nexusAdminSession');
-        const verified = sessionStorage.getItem('nexusVerified');
-        if (fromAdmin === 'true' || verified === 'true') {
-            document.getElementById('passwordModal').classList.add('hide');
-            updateLoadingStep(2);
-            loadDashboardData();
-            showContent();
-        } else {
-            document.getElementById('passwordModal').classList.remove('hide');
-            hideLoading();
-        }
-    }
-
-    function verifyPassword() {
-        const input = document.getElementById('adminPasswordInput').value.trim().toUpperCase();
-        if (input === ADMIN_CODE) {
-            sessionStorage.setItem('nexusVerified', 'true');
-            document.getElementById('passwordModal').classList.add('hide');
-            loadDashboardData();
-            showContent();
-        } else {
-            Swal.fire({ title: 'ACCESS DENIED', text: 'Invalid security code.', icon: 'error', background: '#111424', color: '#fff', confirmButtonColor: '#ef4444' });
-            document.getElementById('adminPasswordInput').value = '';
-        }
-    }
-
-    function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-
-    // Event Listeners
-    document.getElementById('searchInput')?.addEventListener('input', (e) => { currentSearch = e.target.value; currentPage = 1; renderUsers(); });
-    document.getElementById('yearSelect')?.addEventListener('change', async (e) => {
-        const year = parseInt(e.target.value);
-        const monthlyData = {};
-        allUsers.forEach(user => {
-            if (user.createdAt && user.createdAt.getFullYear() === year) {
-                const key = `${year}-${user.createdAt.getMonth() + 1}`;
-                monthlyData[key] = (monthlyData[key] || 0) + 1;
-            }
-        });
-        buildChartData(monthlyData, year);
-    });
-    
-    document.getElementById('verifyPasswordBtn')?.addEventListener('click', verifyPassword);
-    document.getElementById('adminPasswordInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyPassword(); });
-    document.getElementById('adminUsersBtn')?.addEventListener('click', () => { sessionStorage.setItem('nexusAdminSession', 'true'); window.location.href = "admin.html"; });
-    document.getElementById('discussionsBtn')?.addEventListener('click', () => {
-        const name = prompt("Enter your name:", localStorage.getItem('chatUserName') || "Team Member");
-        if (name) { localStorage.setItem('chatUserName', name); sessionStorage.setItem('nexusAdminSession', 'true'); window.location.href = "discussion.html"; }
-    });
-    
-    document.getElementById('enableNotifBtn')?.addEventListener('click', requestNotificationPermission);
-    
-    document.getElementById('notificationBell')?.addEventListener('click', () => {
-        document.getElementById('notificationPanel').classList.toggle('active');
-    });
-    
-    document.getElementById('clearAllNotifBtn')?.addEventListener('click', () => {
-        notifications = [];
-        unreadCount = 0;
-        updateNotificationBadge();
-        renderNotificationList();
-    });
-    
-    document.addEventListener('click', (e) => {
-        const panel = document.getElementById('notificationPanel');
-        const bell = document.getElementById('notificationBell');
-        if (!panel.contains(e.target) && !bell.contains(e.target)) {
-            panel.classList.remove('active');
-        }
-    });
-    
-    if ('Notification' in window && Notification.permission === 'granted') {
-        permissionGranted = true;
-        getAndSaveFCMToken();
-    }
-    
-    setTimeout(() => updateLoadingStep(2), 800);
-    setTimeout(() => updateLoadingStep(3), 1500);
-    setTimeout(() => updateLoadingStep(4), 2200);
-    setTimeout(() => updateLoadingStep(5), 3000);
-    
-    checkSession();
+    document.getElementById('verifyPasswordBtn')?.addEventListener('click', verifyAccess);
+    document.getElementById('adminPasswordInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') verifyAccess(); });
+    document.getElementById('searchInput')?.addEventListener('input', e=>{ currentSearch=e.target.value; currentPage=1; renderUsers(); });
+    document.getElementById('yearSelect')?.addEventListener('change', async(e)=>{ const year=parseInt(e.target.value); const monthlyMap={}; allUsers.forEach(u=>{ if(u.createdAt && u.createdAt.getFullYear()===year){ const key=`${year}-${u.createdAt.getMonth()+1}`; monthlyMap[key]=(monthlyMap[key]||0)+1; } }); buildChartData(monthlyMap, year); });
+    document.getElementById('adminUsersBtn')?.addEventListener('click', ()=>{ sessionStorage.setItem('nexusAdminSession','true'); window.location.href="admin.html"; });
+    document.getElementById('discussionsBtn')?.addEventListener('click',()=>{ const name=prompt("Enter display name:", localStorage.getItem('chatUserName')||"Team Member"); if(name){ localStorage.setItem('chatUserName',name); sessionStorage.setItem('nexusAdminSession','true'); window.location.href="discussion.html"; } });
+    document.getElementById('enableNotifBtn')?.addEventListener('click', requestNotifPermission);
+    document.getElementById('notificationBell')?.addEventListener('click',()=>{ document.getElementById('notificationPanel').classList.toggle('active'); });
+    document.getElementById('clearAllNotifBtn')?.addEventListener('click',()=>{ notifications=[]; unreadCount=0; updateNotifBadge(); renderNotifList(); });
+    document.addEventListener('click',(e)=>{ const panel=document.getElementById('notificationPanel'); const bell=document.getElementById('notificationBell'); if(panel && bell && !panel.contains(e.target) && !bell.contains(e.target)) panel.classList.remove('active'); });
+    if('Notification' in window && Notification.permission === 'granted') { permissionGranted=true; getAndSaveFCMToken(); }
+    if(sessionStorage.getItem('nexusVerified') === 'true'){ document.getElementById('passwordModal').classList.add('hide'); loadFullDashboard(); } else { document.getElementById('passwordModal').classList.remove('hide'); setProgress(0,"Waiting for executive authentication"); }
 </script>
-
-<!-- Service Worker Registration for Push Notifications -->
 <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/firebase-messaging-sw.js')
-            .then(registration => {
-                console.log('Service Worker registered successfully:', registration);
-            })
-            .catch(error => {
-                console.log('Service Worker registration failed:', error);
-            });
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(e=>console.log("SW error",e)); }
+    window.viewUserDetails = (id) => { const event = new CustomEvent('viewUser', { detail: id }); window.dispatchEvent(event); };
+    window.goToPageNum = (p) => { const event = new CustomEvent('goPage', { detail: p }); window.dispatchEvent(event); };
 </script>
-
 </body>
-    </html>
+</html>
