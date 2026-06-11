@@ -344,7 +344,7 @@
             gap: 6px;
         }
 
-        .info-btn {
+        .info-btn, .nav-btn {
             background: rgba(16,185,129,0.15);
             border: 1px solid rgba(16,185,129,0.4);
             padding: 8px 16px;
@@ -356,11 +356,18 @@
             align-items: center;
             gap: 6px;
             transition: all 0.2s;
+            text-decoration: none;
         }
 
-        .info-btn:hover {
+        .info-btn:hover, .nav-btn:hover {
             background: rgba(16,185,129,0.3);
             transform: scale(1.02);
+        }
+
+        .nav-btn {
+            background: rgba(229,184,66,0.15);
+            border-color: rgba(229,184,66,0.4);
+            color: #e5b842;
         }
 
         /* Stats Grid */
@@ -793,6 +800,9 @@
             <p>Enterprise Command Center | VIP 1-13 | Real-time Analytics</p>
         </div>
         <div style="display: flex; gap: 12px; align-items: center;">
+            <!-- NEW BUTTONS: admin.html and discussion.html -->
+            <a href="admin.html" class="nav-btn"><i class="fa-solid fa-chart-line"></i> Admin Panel</a>
+            <a href="discussion.html" class="nav-btn"><i class="fa-solid fa-comments"></i> Discussion</a>
             <button class="info-btn" id="announcementBtn"><i class="fa-solid fa-bullhorn"></i> Announcements</button>
             <div class="notification-bell" id="notificationBell">
                 <i class="fa-regular fa-bell"></i>
@@ -871,24 +881,6 @@
 
         <!-- RIGHT COLUMN -->
         <div>
-            <!-- Broadcast System -->
-            <div class="admin-card">
-                <div class="card-header">
-                    <h3><i class="fa-solid fa-bullhorn"></i> Global Broadcast</h3>
-                    <span class="badge">Send to All</span>
-                </div>
-                <div class="card-body">
-                    <textarea class="form-control" id="broadcastMessage" rows="3" placeholder="Type your announcement here..."></textarea>
-                    <select class="form-control" id="broadcastType" style="margin-top: 12px;">
-                        <option value="info">📢 Information</option>
-                        <option value="success">✅ Success</option>
-                        <option value="warning">⚠️ Warning</option>
-                        <option value="error">🔴 Critical</option>
-                    </select>
-                    <button class="btn btn-primary" id="sendBroadcastBtn" style="margin-top: 16px; width: 100%;"><i class="fa-solid fa-paper-plane"></i> Send Broadcast</button>
-                </div>
-            </div>
-
             <!-- System Configuration -->
             <div class="admin-card">
                 <div class="card-header">
@@ -1316,20 +1308,6 @@
         await updateDoc(settingsRef, { checkinBonus: val });
         addNotification("Settings Updated", `Check-in bonus set to ₦${val}`);
         Swal.fire({ title: "Updated", icon: "success", timer: 1500, background: "#111424" });
-    });
-
-    // Broadcast
-    document.getElementById('sendBroadcastBtn').addEventListener('click', async () => {
-        const msg = document.getElementById('broadcastMessage').value.trim();
-        if (!msg) return;
-        const type = document.getElementById('broadcastType').value;
-        const confirm = await Swal.fire({ title: "Send Broadcast?", text: msg, icon: "question", showCancelButton: true, background: "#111424" });
-        if (confirm.isConfirmed) {
-            await addDoc(collection(db, "broadcasts"), { message: msg, type, timestamp: new Date(), active: true });
-            addNotification("Broadcast Sent", msg.substring(0, 50));
-            document.getElementById('broadcastMessage').value = '';
-            Swal.fire({ title: "Sent!", icon: "success", timer: 1500, background: "#111424" });
-        }
     });
 
     // Maintenance
